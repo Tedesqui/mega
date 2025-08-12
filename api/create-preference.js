@@ -10,7 +10,7 @@ export default async function handler(request, response) {
         return response.status(200).send('OK');
     }
 
-    const frontendUrl = 'https://SEU-USUARIO.github.io/SEU-REPO-FRONTEND/';
+    const frontendUrl = 'https://tedesqui.github.io/mega/';
     const expirationDate = new Date(Date.now() + 30 * 60 * 1000).toISOString(); // 30 minutos de expiração
 
     try {
