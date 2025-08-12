@@ -44,7 +44,7 @@
         // 1. Substitua pela sua PUBLIC KEY do Mercado Pago
         const MERCADO_PAGO_PUBLIC_KEY = 'SUA_PUBLIC_KEY'; 
 
-        // 2. Substitua pela URL do seu backend na Vercel (depois de fazer o deploy)
+        // 2. Substitua pela URL do seu backend na Vercel
         const VERCEL_BACKEND_URL = 'https://SEU-PROJETO-BACKEND.vercel.app'; 
         // --- FIM DA CONFIGURAÇÃO ---
 
@@ -86,15 +86,17 @@
                         preferenceId: preferenceId,
                     },
                     customization: {
-                        paymentMethods: { ticket: 'all', creditCard: 'all', mercadoPago: 'all' },
+                        paymentMethods: {
+                            ticket: 'all',
+                            creditCard: 'all',
+                            debitCard: 'all',
+                            mercadoPago: 'all',
+                            bankTransfer: 'all', // Garante que o PIX seja exibido
+                        },
                     },
                     callbacks: {
                         onReady: () => {},
-                        onSubmit: async ({ selectedPaymentMethod, formData }) => {
-                            // Esta função não é mais necessária para chamar nossa API, 
-                            // o Brick faz isso e nos notifica via callback `onBinChange` ou `onSubmit`
-                            // mas precisa retornar uma Promise.
-                        },
+                        onSubmit: () => {},
                         onError: (error) => {
                             console.error(error);
                             statusMessage.innerText = 'Ocorreu um erro. Tente novamente.';
@@ -102,7 +104,6 @@
                     },
                 });
 
-                // A melhor forma de capturar o resultado é ouvir o evento 'payment:submitted'
                 document.addEventListener('payment:submitted', async (e) => {
                     const { id: paymentId, status } = e.detail;
                     
