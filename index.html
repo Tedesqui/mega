@@ -41,15 +41,10 @@
 
     <script>
         // --- CONFIGURAÇÃO IMPORTANTE ---
-        // 1. Substitua pela sua PUBLIC KEY do Mercado Pago
-        const MERCADO_PAGO_PUBLIC_KEY = 'SUA_PUBLIC_KEY'; 
-
-        // 2. Substitua pela URL do seu backend na Vercel
+        // A chave pública agora é buscada da API. Apenas a URL do backend é necessária aqui.
         const VERCEL_BACKEND_URL = 'https://SEU-PROJETO-BACKEND.vercel.app'; 
         // --- FIM DA CONFIGURAÇÃO ---
 
-
-        const mp = new MercadoPago(MERCADO_PAGO_PUBLIC_KEY, { locale: 'pt-BR' });
         const paymentBrickContainer = document.getElementById('payment-brick_container');
         const gamesContainer = document.getElementById('games-container');
         const statusMessage = document.getElementById('status-message');
@@ -70,15 +65,31 @@
             });
         }
 
-        async function renderPaymentButton() {
+        // A função principal agora busca a chave pública antes de tudo.
+        async function main() {
             try {
+                // 1. BUSCAR A CHAVE PÚBLICA DO BACKEND
+                statusMessage.innerText = 'Configurando ambiente seguro...';
+                const configResponse = await fetch(`${VERCEL_BACKEND_URL}/api/get-config`);
+                const config = await configResponse.json();
+                const publicKey = config.publicKey;
+
+                if (!publicKey) {
+                    throw new Error('Não foi possível obter a chave de configuração.');
+                }
+
+                // 2. INICIAR O MERCADO PAGO COM A CHAVE OBTIDA
+                const mp = new MercadoPago(publicKey, { locale: 'pt-BR' });
+                
+                // 3. CRIAR A PREFERÊNCIA DE PAGAMENTO
                 statusMessage.innerText = 'Carregando pagamento...';
-                const response = await fetch(`${VERCEL_BACKEND_URL}/api/create-preference`, { method: 'POST' });
-                const { preferenceId } = await response.json();
+                const preferenceResponse = await fetch(`${VERCEL_BACKEND_URL}/api/create-preference`, { method: 'POST' });
+                const { preferenceId } = await preferenceResponse.json();
 
                 if (!preferenceId) throw new Error('Preferência de pagamento não obtida.');
                 statusMessage.innerText = '';
                 
+                // 4. RENDERIZAR O BOTÃO DE PAGAMENTO
                 const bricksBuilder = mp.bricks();
                 await bricksBuilder.create('payment', 'payment-brick_container', {
                     initialization: {
@@ -87,23 +98,18 @@
                     },
                     customization: {
                         paymentMethods: {
-                            ticket: 'all',
-                            creditCard: 'all',
-                            debitCard: 'all',
-                            mercadoPago: 'all',
-                            bankTransfer: 'all', // Garante que o PIX seja exibido
+                            ticket: 'all', creditCard: 'all', debitCard: 'all',
+                            mercadoPago: 'all', bankTransfer: 'all',
                         },
                     },
                     callbacks: {
                         onReady: () => {},
                         onSubmit: () => {},
-                        onError: (error) => {
-                            console.error(error);
-                            statusMessage.innerText = 'Ocorreu um erro. Tente novamente.';
-                        },
+                        onError: (error) => console.error(error),
                     },
                 });
 
+                // 5. OUVIR O EVENTO DE PAGAMENTO
                 document.addEventListener('payment:submitted', async (e) => {
                     const { id: paymentId, status } = e.detail;
                     
@@ -132,10 +138,12 @@
 
             } catch (error) {
                 console.error(error);
-                statusMessage.innerText = 'Falha crítica ao iniciar o pagamento. Recarregue a página.';
+                statusMessage.innerText = 'Falha crítica na configuração. Recarregue a página.';
             }
         }
-        renderPaymentButton();
+
+        // Inicia todo o processo
+        main();
     </script>
 </body>
 </html>
