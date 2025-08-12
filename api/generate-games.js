@@ -43,6 +43,7 @@ export default async function handler(request, response) {
         const payment = new Payment(client);
         const paymentInfo = await payment.get({ id: paymentId });
         
+        // Validação crucial: Checa se o pagamento está 'approved' e se o valor está correto
         if (paymentInfo.status === 'approved' && paymentInfo.transaction_amount === 3.00) {
             const games = Array.from({ length: 5 }, () => generateSingleGame());
             response.status(200).json({ games });
