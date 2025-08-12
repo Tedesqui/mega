@@ -16,21 +16,24 @@
         }
         .game-row { margin-bottom: 1rem; padding: 0.5rem; background-color: rgba(0, 0, 0, 0.1); border-radius: 8px; }
         @keyframes pop-in { to { opacity: 1; transform: scale(1); } }
-        /* Controla a visibilidade dos elementos */
         .hidden { display: none; }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 flex items-center justify-center min-h-screen p-4">
 
     <div class="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl p-8 max-w-2xl w-full text-center">
-        <div id="main-content">
-            <h1 class="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">Gerador Inteligente Mega-Sena</h1>
-            <p class="text-gray-600 dark:text-gray-400 mb-6">Gere 5 jogos por apenas R$ 3,00.</p>
-            
-            <div id="games-container" class="my-8 min-h-[100px]">
-                 <p class="text-gray-500">Seus jogos aparecerão aqui após a aprovação do pagamento.</p>
-            </div>
+        <h1 class="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">Gerador Inteligente Mega-Sena</h1>
+        <p id="subtitle" class="text-gray-600 dark:text-gray-400 mb-6">Gere 5 jogos por apenas R$ 3,00.</p>
+        
+        <div id="games-container" class="my-8 min-h-[100px]">
+             <p class="text-gray-500">Seus jogos aparecerão aqui após a aprovação do pagamento.</p>
+        </div>
 
+        <div id="final-message" class="hidden mb-6">
+             <p class="text-2xl text-green-500 font-bold">Obrigado por jogar! Boa sorte! 🍀</p>
+        </div>
+
+        <div id="payment-area">
             <div id="payment-options" class="space-y-4">
                 <h3 class="font-semibold text-lg">Escolha como pagar:</h3>
                 <button id="pay-with-card-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg">💳 Pagar com Cartão de Crédito</button>
@@ -38,7 +41,7 @@
             </div>
             
             <div id="card-payment-brick_container" class="hidden mt-6"></div>
-
+            
             <div id="pix-payment-container" class="hidden mt-6 space-y-4">
                 <form id="pix-form" class="space-y-4">
                     <p class="text-sm">Para gerar o QR Code, por favor, informe seu e-mail (exigido pelo Banco Central).</p>
@@ -52,33 +55,32 @@
                         <input type="text" id="pix-copy-paste-code" readonly class="w-full px-3 py-2 border border-gray-300 rounded-l-md dark:bg-gray-700 dark:border-gray-600">
                         <button id="copy-pix-btn" class="bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 text-sm font-bold p-3 rounded-r-md">Copiar</button>
                     </div>
-                    <p class="text-sm animate-pulse">Aguardando pagamento... Você será redirecionado automaticamente.</p>
+                    <p class="text-sm animate-pulse">Aguardando pagamento... Assim que for aprovado, seus números aparecerão acima.</p>
                 </div>
             </div>
-            
-            <div id="status-message" class="mt-4 text-sm font-semibold"></div>
         </div>
-
-        <div id="final-message" class="hidden">
-             <p class="text-2xl text-green-500 font-bold">Obrigado por jogar! Boa sorte! 🍀</p>
-        </div>
+        
+        <div id="status-message" class="mt-4 text-sm font-semibold"></div>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mt-6">
+            Pagamento processado com segurança pelo Mercado Pago.
+        </p>
     </div>
 
     <script>
-        const VERCEL_BACKEND_URL = 'https://mega-jogo.vercel.app/'; 
+        const VERCEL_BACKEND_URL = 'https://SEU-PROJETO-BACKEND.vercel.app'; 
+        
+        // --- INÍCIO DA LÓGICA CORRIGIDA ---
         
         // Elementos da UI
-        const mainContent = document.getElementById('main-content');
+        const subtitle = document.getElementById('subtitle');
         const finalMessage = document.getElementById('final-message');
         const gamesContainer = document.getElementById('games-container');
         const statusMessage = document.getElementById('status-message');
-        const paymentOptionsContainer = document.getElementById('payment-options');
+        const paymentArea = document.getElementById('payment-area'); // <- Novo wrapper
         
-        // Elementos do fluxo de Cartão
         const payWithCardBtn = document.getElementById('pay-with-card-btn');
         const cardPaymentBrickContainer = document.getElementById('card-payment-brick_container');
 
-        // Elementos do novo fluxo PIX
         const payWithPixBtn = document.getElementById('pay-with-pix-btn');
         const pixPaymentContainer = document.getElementById('pix-payment-container');
         const pixForm = document.getElementById('pix-form');
@@ -89,11 +91,10 @@
         const pixCopyPasteCode = document.getElementById('pix-copy-paste-code');
         const copyPixBtn = document.getElementById('copy-pix-btn');
         
-        let paymentCheckInterval; // Variável para controlar a verificação de status do pagamento
+        let paymentCheckInterval;
 
-        // Função para mostrar os jogos na tela
         function displayGames(games) {
-            gamesContainer.innerHTML = '';
+            gamesContainer.innerHTML = ''; // Limpa a mensagem "Seus jogos aparecerão aqui..."
             games.forEach((game) => {
                 const gameRow = document.createElement('div');
                 gameRow.className = 'game-row flex flex-wrap justify-center items-center';
@@ -108,15 +109,19 @@
             gamesContainer.querySelectorAll('.number-circle').forEach((circle, index) => circle.style.animationDelay = `${index * 50}ms`);
         }
 
-        // Função que lida com o sucesso do pagamento
+        // Função CORRIGIDA que lida com o sucesso do pagamento
         function onPaymentSuccess(games) {
-            clearInterval(paymentCheckInterval);
-            displayGames(games);
-            mainContent.classList.add('hidden');
-            finalMessage.classList.remove('hidden');
+            clearInterval(paymentCheckInterval); // Para a verificação
+            
+            statusMessage.classList.add('hidden'); // Esconde mensagens de status
+            paymentArea.classList.add('hidden');   // Esconde TODA a área de pagamento
+            subtitle.classList.add('hidden');      // Esconde o subtítulo inicial
+
+            displayGames(games); // MOSTRA OS JOGOS
+            
+            finalMessage.classList.remove('hidden'); // MOSTRA A MENSAGEM DE OBRIGADO
         }
 
-        // Função que verifica o status do pagamento periodicamente
         function startPaymentStatusCheck(paymentId) {
             paymentCheckInterval = setInterval(async () => {
                 try {
@@ -125,20 +130,16 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ paymentId })
                     });
-
-                    // Se a resposta for 200 OK, o pagamento foi aprovado
                     if (response.ok) {
                         const { games } = await response.json();
                         onPaymentSuccess(games);
                     }
-                    // Se não, continua verificando (o backend retornará erro 402 até ser aprovado)
                 } catch (error) {
                     console.error('Erro ao verificar status do pagamento:', error);
                 }
-            }, 5000); // Verifica a cada 5 segundos
+            }, 5000);
         }
 
-        // Função principal que prepara o ambiente
         async function initializeApp() {
             try {
                 statusMessage.innerText = 'Configurando ambiente...';
@@ -148,9 +149,9 @@
 
                 const mp = new MercadoPago(publicKey, { locale: 'pt-BR' });
 
-                // --- LÓGICA DO CARTÃO DE CRÉDITO ---
+                // Lógica do Cartão de Crédito
                 payWithCardBtn.addEventListener('click', async () => {
-                    paymentOptionsContainer.classList.add('hidden');
+                    document.getElementById('payment-options').classList.add('hidden');
                     cardPaymentBrickContainer.classList.remove('hidden');
                     statusMessage.innerText = 'Carregando formulário de cartão...';
                     
@@ -186,9 +187,9 @@
                     });
                 });
 
-                // --- LÓGICA DO NOVO FLUXO PIX ---
+                // Lógica do Fluxo PIX
                 payWithPixBtn.addEventListener('click', () => {
-                    paymentOptionsContainer.classList.add('hidden');
+                    document.getElementById('payment-options').classList.add('hidden');
                     pixPaymentContainer.classList.remove('hidden');
                 });
 
@@ -209,13 +210,12 @@
                         const { paymentId, qrCode, qrCodeBase64 } = await response.json();
                         
                         pixForm.classList.add('hidden');
-                        pixQrCodeContainer.classList.remove('hidden');
+                        document.getElementById('pix-qr-code-container').classList.remove('hidden');
                         statusMessage.innerText = '';
                         
                         pixQrCodeImage.src = `data:image/png;base64,${qrCodeBase64}`;
                         pixCopyPasteCode.value = qrCode;
 
-                        // Inicia a verificação do status do pagamento
                         startPaymentStatusCheck(paymentId);
 
                     } catch (error) {
