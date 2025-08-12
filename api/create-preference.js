@@ -6,18 +6,14 @@ const client = new MercadoPagoConfig({
 });
 
 export default async function handler(request, response) {
-    // Tratamento para requisições OPTIONS do CORS
     if (request.method === 'OPTIONS') {
         return response.status(200).send('OK');
     }
 
-    // IMPORTANTE: ATUALIZE COM A URL REAL DO SEU SITE NO GITHUB PAGES
-    const frontendUrl = 'https://tedesqui.github.io/mega/';
+    const frontendUrl = 'https://SEU-USUARIO.github.io/SEU-REPO-FRONTEND/';
+    const expirationDate = new Date(Date.now() + 30 * 60 * 1000).toISOString(); // 30 minutos de expiração
 
     try {
-        // Calcula a data de expiração para 30 minutos a partir de agora
-        const expirationDate = new Date(Date.now() + 30 * 60 * 1000).toISOString();
-
         const preference = new Preference(client);
         const result = await preference.create({
             body: {
@@ -30,13 +26,22 @@ export default async function handler(request, response) {
                         currency_id: 'BRL',
                     },
                 ],
+                // --- INÍCIO DA MODIFICAÇÃO ---
+                // Define os métodos de pagamento permitidos
+                payment_methods: {
+                    excluded_payment_types: [
+                        { id: 'ticket' },      // Exclui Boleto
+                        { id: 'debit_card' }   // Exclui Cartão de Débito
+                    ],
+                    installments: 1 // Número de parcelas (1 = à vista)
+                },
+                // --- FIM DA MODIFICAÇÃO ---
                 back_urls: {
                     success: frontendUrl,
                     failure: frontendUrl,
                     pending: frontendUrl,
                 },
                 auto_return: 'approved',
-                // Adiciona a data de expiração na preferência (bom para PIX e Boleto)
                 date_of_expiration: expirationDate,
             },
         });
