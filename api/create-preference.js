@@ -11,10 +11,13 @@ export default async function handler(request, response) {
         return response.status(200).send('OK');
     }
 
-    // A URL do seu frontend para onde o usuário retornará após o pagamento
+    // IMPORTANTE: ATUALIZE COM A URL REAL DO SEU SITE NO GITHUB PAGES
     const frontendUrl = 'https://SEU-USUARIO.github.io/SEU-REPO-FRONTEND/';
 
     try {
+        // Calcula a data de expiração para 30 minutos a partir de agora
+        const expirationDate = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+
         const preference = new Preference(client);
         const result = await preference.create({
             body: {
@@ -33,6 +36,8 @@ export default async function handler(request, response) {
                     pending: frontendUrl,
                 },
                 auto_return: 'approved',
+                // Adiciona a data de expiração na preferência (bom para PIX e Boleto)
+                date_of_expiration: expirationDate,
             },
         });
 
