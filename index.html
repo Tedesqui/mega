@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador Inteligente para a Mega-Sena</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .number-circle {
+            width: 50px; height: 50px; margin: 4px;
+            animation: pop-in 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+            opacity: 0; transform: scale(0.5);
+        }
+        .game-row {
+            margin-bottom: 1rem; padding: 0.5rem;
+            background-color: rgba(0, 0, 0, 0.1); border-radius: 8px;
+        }
+        @keyframes pop-in { to { opacity: 1; transform: scale(1); } }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 flex items-center justify-center min-h-screen p-4">
+
+    <div class="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl p-8 max-w-2xl w-full text-center">
+        <h1 class="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">Gerador Inteligente Mega-Sena</h1>
+        <p class="text-gray-600 dark:text-gray-400 mb-6">Gere 5 jogos por apenas R$ 3,00. Os números são baseados em estatísticas para aumentar suas chances.</p>
+        
+        <div id="games-container" class="my-8 min-h-[100px]">
+             <p class="text-gray-500">Seus jogos aparecerão aqui após o pagamento ser aprovado.</p>
+        </div>
+
+        <div id="payment-brick_container"></div>
+        <div id="status-message" class="mt-4 text-sm"></div>
+
+        <p class="text-xs text-gray-400 dark:text-gray-500 mt-6">
+            Jogue com responsabilidade. Pagamento processado com segurança pelo Mercado Pago.
+        </p>
+    </div>
+
+    <script>
+        // --- CONFIGURAÇÃO IMPORTANTE ---
+        // 1. Substitua pela sua PUBLIC KEY do Mercado Pago
+        const MERCADO_PAGO_PUBLIC_KEY = 'SUA_PUBLIC_KEY'; 
+
+        // 2. Substitua pela URL do seu backend na Vercel (depois de fazer o deploy)
+        const VERCEL_BACKEND_URL = 'https://SEU-PROJETO-BACKEND.vercel.app'; 
+        // --- FIM DA CONFIGURAÇÃO ---
+
+
+        const mp = new MercadoPago(MERCADO_PAGO_PUBLIC_KEY, { locale: 'pt-BR' });
+        const paymentBrickContainer = document.getElementById('payment-brick_container');
+        const gamesContainer = document.getElementById('games-container');
+        const statusMessage = document.getElementById('status-message');
+
+        function displayGames(games) {
+            gamesContainer.innerHTML = '';
+            games.forEach((game, gameIndex) => {
+                const gameRow = document.createElement('div');
+                gameRow.className = 'game-row flex flex-wrap justify-center items-center';
+                game.forEach((number, numberIndex) => {
+                    const circle = document.createElement('div');
+                    circle.className = 'number-circle bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xl font-bold rounded-full flex items-center justify-center shadow-md';
+                    circle.textContent = number.toString().padStart(2, '0');
+                    circle.style.animationDelay = `${gameIndex * 200 + numberIndex * 50}ms`;
+                    gameRow.appendChild(circle);
+                });
+                gamesContainer.appendChild(gameRow);
+            });
+        }
+
+        async function renderPaymentButton() {
+            try {
+                statusMessage.innerText = 'Carregando pagamento...';
+                const response = await fetch(`${VERCEL_BACKEND_URL}/api/create-preference`, { method: 'POST' });
+                const { preferenceId } = await response.json();
+
+                if (!preferenceId) throw new Error('Preferência de pagamento não obtida.');
+                statusMessage.innerText = '';
+                
+                const bricksBuilder = mp.bricks();
+                await bricksBuilder.create('payment', 'payment-brick_container', {
+                    initialization: {
+                        amount: 3.00,
+                        preferenceId: preferenceId,
+                    },
+                    customization: {
+                        paymentMethods: { ticket: 'all', creditCard: 'all', mercadoPago: 'all' },
+                    },
+                    callbacks: {
+                        onReady: () => {},
+                        onSubmit: async ({ selectedPaymentMethod, formData }) => {
+                            // Esta função não é mais necessária para chamar nossa API, 
+                            // o Brick faz isso e nos notifica via callback `onBinChange` ou `onSubmit`
+                            // mas precisa retornar uma Promise.
+                        },
+                        onError: (error) => {
+                            console.error(error);
+                            statusMessage.innerText = 'Ocorreu um erro. Tente novamente.';
+                        },
+                    },
+                });
+
+                // A melhor forma de capturar o resultado é ouvir o evento 'payment:submitted'
+                document.addEventListener('payment:submitted', async (e) => {
+                    const { id: paymentId, status } = e.detail;
+                    
+                    if (status === 'approved') {
+                        statusMessage.innerText = '✅ Pagamento Aprovado! Gerando seus jogos...';
+                        
+                        const gameResponse = await fetch(`${VERCEL_BACKEND_URL}/api/generate-games`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ paymentId })
+                        });
+
+                        if(gameResponse.ok){
+                            const { games } = await gameResponse.json();
+                            displayGames(games);
+                            paymentBrickContainer.innerHTML = '<p class="text-green-500 font-bold">Obrigado por jogar! Boa sorte! 🍀</p>';
+                        } else {
+                            statusMessage.innerText = 'Erro ao buscar jogos após pagamento.';
+                        }
+                    } else if (status === 'pending') {
+                        statusMessage.innerText = '⏳ Pagamento pendente. Aguarde a confirmação.';
+                    } else {
+                        statusMessage.innerText = '❌ Pagamento rejeitado.';
+                    }
+                });
+
+            } catch (error) {
+                console.error(error);
+                statusMessage.innerText = 'Falha crítica ao iniciar o pagamento. Recarregue a página.';
+            }
+        }
+        renderPaymentButton();
+    </script>
+</body>
+</html>
