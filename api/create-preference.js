@@ -12,7 +12,7 @@ export default async function handler(request, response) {
     }
 
     // IMPORTANTE: ATUALIZE COM A URL REAL DO SEU SITE NO GITHUB PAGES
-    const frontendUrl = 'https://SEU-USUARIO.github.io/SEU-REPO-FRONTEND/';
+    const frontendUrl = 'https://tedesqui.github.io/mega/';
 
     try {
         // Calcula a data de expiração para 30 minutos a partir de agora
