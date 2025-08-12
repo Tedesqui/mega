@@ -14,12 +14,10 @@
             animation: pop-in 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
             opacity: 0; transform: scale(0.5);
         }
-        .game-row {
-            margin-bottom: 1rem; padding: 0.5rem;
-            background-color: rgba(0, 0, 0, 0.1); border-radius: 8px;
-        }
+        .game-row { margin-bottom: 1rem; padding: 0.5rem; background-color: rgba(0, 0, 0, 0.1); border-radius: 8px; }
         @keyframes pop-in { to { opacity: 1; transform: scale(1); } }
-        #card-payment-brick_container, #pix-payment-brick_container { display: none; }
+        /* Controla a visibilidade dos elementos */
+        .hidden { display: none; }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 flex items-center justify-center min-h-screen p-4">
@@ -35,12 +33,28 @@
 
             <div id="payment-options" class="space-y-4">
                 <h3 class="font-semibold text-lg">Escolha como pagar:</h3>
-                <button id="pay-with-card-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105">💳 Pagar com Cartão de Crédito</button>
-                <button id="pay-with-pix-btn" class="w-full bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105">✨ Pagar com PIX</button>
+                <button id="pay-with-card-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg">💳 Pagar com Cartão de Crédito</button>
+                <button id="pay-with-pix-btn" class="w-full bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-4 rounded-lg">✨ Pagar com PIX</button>
             </div>
             
-            <div id="card-payment-brick_container" class="mt-6"></div>
-            <div id="pix-payment-brick_container" class="mt-6"></div>
+            <div id="card-payment-brick_container" class="hidden mt-6"></div>
+
+            <div id="pix-payment-container" class="hidden mt-6 space-y-4">
+                <form id="pix-form" class="space-y-4">
+                    <p class="text-sm">Para gerar o QR Code, por favor, informe seu e-mail (exigido pelo Banco Central).</p>
+                    <input type="email" id="pix-email" placeholder="seuemail@exemplo.com" required class="w-full px-3 py-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600">
+                    <button type="submit" id="generate-pix-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg">Gerar QR Code PIX</button>
+                </form>
+                <div id="pix-qr-code-container" class="hidden space-y-4">
+                    <p class="font-semibold">Escaneie o QR Code ou use o Copia e Cola:</p>
+                    <img id="pix-qr-code-image" src="" alt="QR Code PIX" class="mx-auto border-4 border-white rounded-lg">
+                    <div class="flex">
+                        <input type="text" id="pix-copy-paste-code" readonly class="w-full px-3 py-2 border border-gray-300 rounded-l-md dark:bg-gray-700 dark:border-gray-600">
+                        <button id="copy-pix-btn" class="bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 text-sm font-bold p-3 rounded-r-md">Copiar</button>
+                    </div>
+                    <p class="text-sm animate-pulse">Aguardando pagamento... Você será redirecionado automaticamente.</p>
+                </div>
+            </div>
             
             <div id="status-message" class="mt-4 text-sm font-semibold"></div>
         </div>
@@ -48,27 +62,36 @@
         <div id="final-message" class="hidden">
              <p class="text-2xl text-green-500 font-bold">Obrigado por jogar! Boa sorte! 🍀</p>
         </div>
-
-        <p class="text-xs text-gray-400 dark:text-gray-500 mt-6">
-            Pagamento processado com segurança pelo Mercado Pago.
-        </p>
     </div>
 
     <script>
         const VERCEL_BACKEND_URL = 'https://mega-jogo.vercel.app/'; 
         
+        // Elementos da UI
         const mainContent = document.getElementById('main-content');
         const finalMessage = document.getElementById('final-message');
         const gamesContainer = document.getElementById('games-container');
         const statusMessage = document.getElementById('status-message');
-        
-        const payWithCardBtn = document.getElementById('pay-with-card-btn');
-        const payWithPixBtn = document.getElementById('pay-with-pix-btn');
         const paymentOptionsContainer = document.getElementById('payment-options');
-
+        
+        // Elementos do fluxo de Cartão
+        const payWithCardBtn = document.getElementById('pay-with-card-btn');
         const cardPaymentBrickContainer = document.getElementById('card-payment-brick_container');
-        const pixPaymentBrickContainer = document.getElementById('pix-payment-brick_container');
 
+        // Elementos do novo fluxo PIX
+        const payWithPixBtn = document.getElementById('pay-with-pix-btn');
+        const pixPaymentContainer = document.getElementById('pix-payment-container');
+        const pixForm = document.getElementById('pix-form');
+        const pixEmailInput = document.getElementById('pix-email');
+        const generatePixBtn = document.getElementById('generate-pix-btn');
+        const pixQrCodeContainer = document.getElementById('pix-qr-code-container');
+        const pixQrCodeImage = document.getElementById('pix-qr-code-image');
+        const pixCopyPasteCode = document.getElementById('pix-copy-paste-code');
+        const copyPixBtn = document.getElementById('copy-pix-btn');
+        
+        let paymentCheckInterval; // Variável para controlar a verificação de status do pagamento
+
+        // Função para mostrar os jogos na tela
         function displayGames(games) {
             gamesContainer.innerHTML = '';
             games.forEach((game) => {
@@ -82,118 +105,135 @@
                 });
                 gamesContainer.appendChild(gameRow);
             });
-            gamesContainer.querySelectorAll('.number-circle').forEach((circle, index) => {
-                circle.style.animationDelay = `${index * 50}ms`;
-            });
+            gamesContainer.querySelectorAll('.number-circle').forEach((circle, index) => circle.style.animationDelay = `${index * 50}ms`);
         }
 
-        async function handlePayment(paymentId) {
-            statusMessage.innerText = '✅ Pagamento Aprovado! Gerando seus jogos...';
-            
-            const gameResponse = await fetch(`${VERCEL_BACKEND_URL}/api/generate-games`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ paymentId })
-            });
-
-            if(gameResponse.ok){
-                const { games } = await gameResponse.json();
-                displayGames(games);
-                mainContent.classList.add('hidden');
-                finalMessage.classList.remove('hidden');
-            } else {
-                statusMessage.innerText = 'Erro ao buscar jogos após pagamento.';
-            }
+        // Função que lida com o sucesso do pagamento
+        function onPaymentSuccess(games) {
+            clearInterval(paymentCheckInterval);
+            displayGames(games);
+            mainContent.classList.add('hidden');
+            finalMessage.classList.remove('hidden');
         }
 
+        // Função que verifica o status do pagamento periodicamente
+        function startPaymentStatusCheck(paymentId) {
+            paymentCheckInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`${VERCEL_BACKEND_URL}/api/generate-games`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ paymentId })
+                    });
+
+                    // Se a resposta for 200 OK, o pagamento foi aprovado
+                    if (response.ok) {
+                        const { games } = await response.json();
+                        onPaymentSuccess(games);
+                    }
+                    // Se não, continua verificando (o backend retornará erro 402 até ser aprovado)
+                } catch (error) {
+                    console.error('Erro ao verificar status do pagamento:', error);
+                }
+            }, 5000); // Verifica a cada 5 segundos
+        }
+
+        // Função principal que prepara o ambiente
         async function initializeApp() {
             try {
-                statusMessage.innerText = 'Configurando ambiente seguro...';
-
+                statusMessage.innerText = 'Configurando ambiente...';
                 const configResponse = await fetch(`${VERCEL_BACKEND_URL}/api/get-config`);
                 const { publicKey } = await configResponse.json();
+                if (!publicKey) throw new Error('Chave pública não encontrada.');
 
-                const preferenceResponse = await fetch(`${VERCEL_BACKEND_URL}/api/create-preference`, { method: 'POST' });
-                const { preferenceId } = await preferenceResponse.json();
-
-                if (!publicKey || !preferenceId) throw new Error('Falha ao obter configurações do servidor.');
-                
                 const mp = new MercadoPago(publicKey, { locale: 'pt-BR' });
-                const bricksBuilder = mp.bricks();
-                statusMessage.innerText = '';
 
-                // Listener para o botão de Cartão de Crédito
+                // --- LÓGICA DO CARTÃO DE CRÉDITO ---
                 payWithCardBtn.addEventListener('click', async () => {
-                    if (document.getElementById('card-payment-brick_container').innerHTML !== "") return;
-                    paymentOptionsContainer.style.display = 'none';
-                    cardPaymentBrickContainer.style.display = 'block';
-                    await bricksBuilder.create('cardPayment', 'card-payment-brick_container', {
+                    paymentOptionsContainer.classList.add('hidden');
+                    cardPaymentBrickContainer.classList.remove('hidden');
+                    statusMessage.innerText = 'Carregando formulário de cartão...';
+                    
+                    const preferenceResponse = await fetch(`${VERCEL_BACKEND_URL}/api/create-preference`, { method: 'POST' });
+                    const { preferenceId } = await preferenceResponse.json();
+                    
+                    await mp.bricks().create('cardPayment', 'card-payment-brick_container', {
                         initialization: { amount: 3.00, preferenceId: preferenceId },
-                        customization: { visual: { style: { theme: 'dark' } } },
                         callbacks: {
-                            onReady: () => {},
                             onSubmit: async ({ formData }) => {
-                                statusMessage.innerText = 'Processando pagamento...';
-                                // Este fetch é para o Card Payment Brick, que envia os dados do cartão diretamente.
-                                // Nota: Esta é uma chamada client-side, diferente do fluxo do PIX.
+                                statusMessage.innerText = 'Processando...';
                                 const response = await fetch(`https://api.mercadopago.com/v1/payments`, {
                                     method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                        'X-Preference-Id': preferenceId,
-                                        Authorization: `Bearer ${publicKey}`
-                                    },
+                                    headers: { 'Content-Type': 'application/json', 'X-Preference-Id': preferenceId, Authorization: `Bearer ${publicKey}` },
                                     body: JSON.stringify(formData)
                                 });
                                 const data = await response.json();
                                 if (data.status === 'approved') {
-                                    await handlePayment(data.id);
+                                    const gameResponse = await fetch(`${VERCEL_BACKEND_URL}/api/generate-games`, {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ paymentId: data.id })
+                                    });
+                                    const { games } = await gameResponse.json();
+                                    onPaymentSuccess(games);
                                 } else {
-                                    statusMessage.innerText = 'Pagamento não aprovado. Tente novamente.';
+                                    statusMessage.innerText = 'Pagamento não aprovado.';
                                 }
                             },
                             onError: (error) => console.error(error),
+                            onReady: () => statusMessage.innerText = '',
                         },
                     });
                 });
 
-                // Listener para o botão de PIX
-                payWithPixBtn.addEventListener('click', async () => {
-                    if (document.getElementById('pix-payment-brick_container').innerHTML !== "") return;
-                    paymentOptionsContainer.style.display = 'none';
-                    pixPaymentBrickContainer.style.display = 'block';
-                    await bricksBuilder.create('payment', 'pix-payment-brick_container', {
-                        initialization: { amount: 3.00, preferenceId: preferenceId },
-                        // --- CORREÇÃO APLICADA AQUI ---
-                        customization: {
-                            paymentMethods: {
-                                bankTransfer: 'all', // Apenas PIX é incluído
-                                ticket: [],          // Garante que boleto não apareça
-                                creditCard: [],      // Garante que cartão não apareça
-                                debitCard: [],       // Garante que débito não apareça
-                                mercadoPago: [],     // Garante que conta MP não apareça
-                            }
-                        },
-                        callbacks: {
-                            onReady: () => {},
-                            onSubmit: () => {},
-                            onError: (error) => console.error(error)
-                        }
-                    });
+                // --- LÓGICA DO NOVO FLUXO PIX ---
+                payWithPixBtn.addEventListener('click', () => {
+                    paymentOptionsContainer.classList.add('hidden');
+                    pixPaymentContainer.classList.remove('hidden');
                 });
 
-                document.addEventListener('payment:submitted', async (e) => {
-                    const { id: paymentId, status } = e.detail;
-                    if (status === 'approved') {
-                        await handlePayment(paymentId);
-                    } else {
-                         statusMessage.innerText = `Status do pagamento: ${status}.`;
+                pixForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    generatePixBtn.disabled = true;
+                    statusMessage.innerText = 'Gerando PIX...';
+
+                    try {
+                        const response = await fetch(`${VERCEL_BACKEND_URL}/api/create-pix-payment`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ email: pixEmailInput.value })
+                        });
+
+                        if (!response.ok) throw new Error('Falha ao criar PIX. Tente novamente.');
+
+                        const { paymentId, qrCode, qrCodeBase64 } = await response.json();
+                        
+                        pixForm.classList.add('hidden');
+                        pixQrCodeContainer.classList.remove('hidden');
+                        statusMessage.innerText = '';
+                        
+                        pixQrCodeImage.src = `data:image/png;base64,${qrCodeBase64}`;
+                        pixCopyPasteCode.value = qrCode;
+
+                        // Inicia a verificação do status do pagamento
+                        startPaymentStatusCheck(paymentId);
+
+                    } catch (error) {
+                        statusMessage.innerText = error.message;
+                        generatePixBtn.disabled = false;
                     }
                 });
 
+                copyPixBtn.addEventListener('click', () => {
+                    navigator.clipboard.writeText(pixCopyPasteCode.value);
+                    copyPixBtn.innerText = 'Copiado!';
+                    setTimeout(() => { copyPixBtn.innerText = 'Copiar'; }, 2000);
+                });
+
+                statusMessage.innerText = '';
             } catch (error) {
                 console.error(error);
-                statusMessage.innerText = 'Falha crítica na configuração. Verifique o console e recarregue.';
+                statusMessage.innerText = 'Falha crítica na configuração. Recarregue.';
             }
         }
         
