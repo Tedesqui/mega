@@ -19,7 +19,6 @@
             background-color: rgba(0, 0, 0, 0.1); border-radius: 8px;
         }
         @keyframes pop-in { to { opacity: 1; transform: scale(1); } }
-        /* Esconde os containers dos bricks inicialmente */
         #card-payment-brick_container, #pix-payment-brick_container { display: none; }
     </style>
 </head>
@@ -56,7 +55,7 @@
     </div>
 
     <script>
-        const VERCEL_BACKEND_URL = 'https://mega-jogo.vercel.app/'; 
+        const VERCEL_BACKEND_URL = 'https://SEU-PROJETO-BACKEND.vercel.app'; 
         
         const mainContent = document.getElementById('main-content');
         const finalMessage = document.getElementById('final-message');
@@ -70,7 +69,6 @@
         const cardPaymentBrickContainer = document.getElementById('card-payment-brick_container');
         const pixPaymentBrickContainer = document.getElementById('pix-payment-brick_container');
 
-        // Função para mostrar os jogos na tela
         function displayGames(games) {
             gamesContainer.innerHTML = '';
             games.forEach((game) => {
@@ -84,13 +82,11 @@
                 });
                 gamesContainer.appendChild(gameRow);
             });
-            // Anima a aparição dos jogos
             gamesContainer.querySelectorAll('.number-circle').forEach((circle, index) => {
                 circle.style.animationDelay = `${index * 50}ms`;
             });
         }
 
-        // Função unificada para lidar com o resultado do pagamento
         async function handlePayment(paymentId) {
             statusMessage.innerText = '✅ Pagamento Aprovado! Gerando seus jogos...';
             
@@ -110,84 +106,82 @@
             }
         }
 
-        // Função principal que prepara o ambiente
         async function initializeApp() {
             try {
                 statusMessage.innerText = 'Configurando ambiente seguro...';
 
-                // 1. Busca a chave pública e a preferência de pagamento
                 const configResponse = await fetch(`${VERCEL_BACKEND_URL}/api/get-config`);
                 const { publicKey } = await configResponse.json();
 
                 const preferenceResponse = await fetch(`${VERCEL_BACKEND_URL}/api/create-preference`, { method: 'POST' });
                 const { preferenceId } = await preferenceResponse.json();
 
-                if (!publicKey || !preferenceId) {
-                    throw new Error('Falha ao obter configurações do servidor.');
-                }
+                if (!publicKey || !preferenceId) throw new Error('Falha ao obter configurações do servidor.');
                 
                 const mp = new MercadoPago(publicKey, { locale: 'pt-BR' });
                 const bricksBuilder = mp.bricks();
                 statusMessage.innerText = '';
 
-                // Callbacks para o Brick de Cartão de Crédito
-                const cardPaymentCallbacks = {
-                    onReady: () => {},
-                    onSubmit: async (formData) => {
-                        statusMessage.innerText = 'Processando pagamento...';
-                        const response = await fetch('/v1/payments', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-Preference-Id': preferenceId,
-                                Authorization: `Bearer ${publicKey}`
-                            },
-                            body: JSON.stringify(formData)
-                        });
-                        const data = await response.json();
-                        if (data.status === 'approved') {
-                            await handlePayment(data.id);
-                        } else {
-                            statusMessage.innerText = 'Pagamento não aprovado. Tente novamente.';
-                        }
-                    },
-                    onError: (error) => console.error(error),
-                };
-
                 // Listener para o botão de Cartão de Crédito
                 payWithCardBtn.addEventListener('click', async () => {
+                    if (document.getElementById('card-payment-brick_container').innerHTML !== "") return;
                     paymentOptionsContainer.style.display = 'none';
                     cardPaymentBrickContainer.style.display = 'block';
                     await bricksBuilder.create('cardPayment', 'card-payment-brick_container', {
                         initialization: { amount: 3.00, preferenceId: preferenceId },
                         customization: { visual: { style: { theme: 'dark' } } },
-                        callbacks: cardPaymentCallbacks,
+                        callbacks: {
+                            onReady: () => {},
+                            onSubmit: async ({ formData }) => {
+                                statusMessage.innerText = 'Processando pagamento...';
+                                // Este fetch é para o Card Payment Brick, que envia os dados do cartão diretamente.
+                                // Nota: Esta é uma chamada client-side, diferente do fluxo do PIX.
+                                const response = await fetch(`https://api.mercadopago.com/v1/payments`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-Preference-Id': preferenceId,
+                                        Authorization: `Bearer ${publicKey}`
+                                    },
+                                    body: JSON.stringify(formData)
+                                });
+                                const data = await response.json();
+                                if (data.status === 'approved') {
+                                    await handlePayment(data.id);
+                                } else {
+                                    statusMessage.innerText = 'Pagamento não aprovado. Tente novamente.';
+                                }
+                            },
+                            onError: (error) => console.error(error),
+                        },
                     });
                 });
 
                 // Listener para o botão de PIX
                 payWithPixBtn.addEventListener('click', async () => {
+                    if (document.getElementById('pix-payment-brick_container').innerHTML !== "") return;
                     paymentOptionsContainer.style.display = 'none';
                     pixPaymentBrickContainer.style.display = 'block';
                     await bricksBuilder.create('payment', 'pix-payment-brick_container', {
                         initialization: { amount: 3.00, preferenceId: preferenceId },
+                        // --- CORREÇÃO APLICADA AQUI ---
                         customization: {
                             paymentMethods: {
-                                ticket: "hidden",
-                                creditCard: "hidden",
-                                debitCard: "hidden",
-                                bankTransfer: "all", // Mostra apenas PIX
-                            },
+                                bankTransfer: 'all', // Apenas PIX é incluído
+                                ticket: [],          // Garante que boleto não apareça
+                                creditCard: [],      // Garante que cartão não apareça
+                                debitCard: [],       // Garante que débito não apareça
+                                mercadoPago: [],     // Garante que conta MP não apareça
+                            }
                         },
                         callbacks: {
                             onReady: () => {},
-                            onSubmit: () => {}, // O brick de pagamento lida com isso sozinho
+                            onSubmit: () => {},
                             onError: (error) => console.error(error)
                         }
                     });
                 });
 
-                // Listener global para o resultado do PIX (e outras redireções)
                 document.addEventListener('payment:submitted', async (e) => {
                     const { id: paymentId, status } = e.detail;
                     if (status === 'approved') {
