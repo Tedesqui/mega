@@ -19,131 +19,191 @@
             background-color: rgba(0, 0, 0, 0.1); border-radius: 8px;
         }
         @keyframes pop-in { to { opacity: 1; transform: scale(1); } }
+        /* Esconde os containers dos bricks inicialmente */
+        #card-payment-brick_container, #pix-payment-brick_container { display: none; }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 flex items-center justify-center min-h-screen p-4">
 
     <div class="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl p-8 max-w-2xl w-full text-center">
-        <h1 class="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">Gerador Inteligente Mega-Sena</h1>
-        <p class="text-gray-600 dark:text-gray-400 mb-6">Gere 5 jogos por apenas R$ 3,00. Os números são baseados em estatísticas para aumentar suas chances.</p>
-        
-        <div id="games-container" class="my-8 min-h-[100px]">
-             <p class="text-gray-500">Seus jogos aparecerão aqui após o pagamento ser aprovado.</p>
+        <div id="main-content">
+            <h1 class="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">Gerador Inteligente Mega-Sena</h1>
+            <p class="text-gray-600 dark:text-gray-400 mb-6">Gere 5 jogos por apenas R$ 3,00.</p>
+            
+            <div id="games-container" class="my-8 min-h-[100px]">
+                 <p class="text-gray-500">Seus jogos aparecerão aqui após a aprovação do pagamento.</p>
+            </div>
+
+            <div id="payment-options" class="space-y-4">
+                <h3 class="font-semibold text-lg">Escolha como pagar:</h3>
+                <button id="pay-with-card-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105">💳 Pagar com Cartão de Crédito</button>
+                <button id="pay-with-pix-btn" class="w-full bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105">✨ Pagar com PIX</button>
+            </div>
+            
+            <div id="card-payment-brick_container" class="mt-6"></div>
+            <div id="pix-payment-brick_container" class="mt-6"></div>
+            
+            <div id="status-message" class="mt-4 text-sm font-semibold"></div>
         </div>
 
-        <div id="payment-brick_container"></div>
-        <div id="status-message" class="mt-4 text-sm"></div>
+        <div id="final-message" class="hidden">
+             <p class="text-2xl text-green-500 font-bold">Obrigado por jogar! Boa sorte! 🍀</p>
+        </div>
 
         <p class="text-xs text-gray-400 dark:text-gray-500 mt-6">
-            Jogue com responsabilidade. Pagamento processado com segurança pelo Mercado Pago.
+            Pagamento processado com segurança pelo Mercado Pago.
         </p>
     </div>
 
     <script>
-        // --- CONFIGURAÇÃO IMPORTANTE ---
-        // A chave pública agora é buscada da API. Apenas a URL do backend é necessária aqui.
-        const VERCEL_BACKEND_URL = 'https://mega-jogo.vercel.app/'; 
-        // --- FIM DA CONFIGURAÇÃO ---
-
-        const paymentBrickContainer = document.getElementById('payment-brick_container');
+        const VERCEL_BACKEND_URL = 'https://SEU-PROJETO-BACKEND.vercel.app'; 
+        
+        const mainContent = document.getElementById('main-content');
+        const finalMessage = document.getElementById('final-message');
         const gamesContainer = document.getElementById('games-container');
         const statusMessage = document.getElementById('status-message');
+        
+        const payWithCardBtn = document.getElementById('pay-with-card-btn');
+        const payWithPixBtn = document.getElementById('pay-with-pix-btn');
+        const paymentOptionsContainer = document.getElementById('payment-options');
 
+        const cardPaymentBrickContainer = document.getElementById('card-payment-brick_container');
+        const pixPaymentBrickContainer = document.getElementById('pix-payment-brick_container');
+
+        // Função para mostrar os jogos na tela
         function displayGames(games) {
             gamesContainer.innerHTML = '';
-            games.forEach((game, gameIndex) => {
+            games.forEach((game) => {
                 const gameRow = document.createElement('div');
                 gameRow.className = 'game-row flex flex-wrap justify-center items-center';
-                game.forEach((number, numberIndex) => {
+                game.forEach((number) => {
                     const circle = document.createElement('div');
                     circle.className = 'number-circle bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xl font-bold rounded-full flex items-center justify-center shadow-md';
                     circle.textContent = number.toString().padStart(2, '0');
-                    circle.style.animationDelay = `${gameIndex * 200 + numberIndex * 50}ms`;
                     gameRow.appendChild(circle);
                 });
                 gamesContainer.appendChild(gameRow);
             });
+            // Anima a aparição dos jogos
+            gamesContainer.querySelectorAll('.number-circle').forEach((circle, index) => {
+                circle.style.animationDelay = `${index * 50}ms`;
+            });
         }
 
-        // A função principal agora busca a chave pública antes de tudo.
-        async function main() {
+        // Função unificada para lidar com o resultado do pagamento
+        async function handlePayment(paymentId) {
+            statusMessage.innerText = '✅ Pagamento Aprovado! Gerando seus jogos...';
+            
+            const gameResponse = await fetch(`${VERCEL_BACKEND_URL}/api/generate-games`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ paymentId })
+            });
+
+            if(gameResponse.ok){
+                const { games } = await gameResponse.json();
+                displayGames(games);
+                mainContent.classList.add('hidden');
+                finalMessage.classList.remove('hidden');
+            } else {
+                statusMessage.innerText = 'Erro ao buscar jogos após pagamento.';
+            }
+        }
+
+        // Função principal que prepara o ambiente
+        async function initializeApp() {
             try {
-                // 1. BUSCAR A CHAVE PÚBLICA DO BACKEND
                 statusMessage.innerText = 'Configurando ambiente seguro...';
+
+                // 1. Busca a chave pública e a preferência de pagamento
                 const configResponse = await fetch(`${VERCEL_BACKEND_URL}/api/get-config`);
-                const config = await configResponse.json();
-                const publicKey = config.publicKey;
+                const { publicKey } = await configResponse.json();
 
-                if (!publicKey) {
-                    throw new Error('Não foi possível obter a chave de configuração.');
-                }
-
-                // 2. INICIAR O MERCADO PAGO COM A CHAVE OBTIDA
-                const mp = new MercadoPago(publicKey, { locale: 'pt-BR' });
-                
-                // 3. CRIAR A PREFERÊNCIA DE PAGAMENTO
-                statusMessage.innerText = 'Carregando pagamento...';
                 const preferenceResponse = await fetch(`${VERCEL_BACKEND_URL}/api/create-preference`, { method: 'POST' });
                 const { preferenceId } = await preferenceResponse.json();
 
-                if (!preferenceId) throw new Error('Preferência de pagamento não obtida.');
-                statusMessage.innerText = '';
+                if (!publicKey || !preferenceId) {
+                    throw new Error('Falha ao obter configurações do servidor.');
+                }
                 
-                // 4. RENDERIZAR O BOTÃO DE PAGAMENTO
+                const mp = new MercadoPago(publicKey, { locale: 'pt-BR' });
                 const bricksBuilder = mp.bricks();
-                await bricksBuilder.create('payment', 'payment-brick_container', {
-                    initialization: {
-                        amount: 3.00,
-                        preferenceId: preferenceId,
+                statusMessage.innerText = '';
+
+                // Callbacks para o Brick de Cartão de Crédito
+                const cardPaymentCallbacks = {
+                    onReady: () => {},
+                    onSubmit: async (formData) => {
+                        statusMessage.innerText = 'Processando pagamento...';
+                        const response = await fetch('/v1/payments', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Preference-Id': preferenceId,
+                                Authorization: `Bearer ${publicKey}`
+                            },
+                            body: JSON.stringify(formData)
+                        });
+                        const data = await response.json();
+                        if (data.status === 'approved') {
+                            await handlePayment(data.id);
+                        } else {
+                            statusMessage.innerText = 'Pagamento não aprovado. Tente novamente.';
+                        }
                     },
-                    customization: {
-                        paymentMethods: {
-                            ticket: 'all', creditCard: 'all', debitCard: 'all',
-                            mercadoPago: 'all', bankTransfer: 'all',
-                        },
-                    },
-                    callbacks: {
-                        onReady: () => {},
-                        onSubmit: () => {},
-                        onError: (error) => console.error(error),
-                    },
+                    onError: (error) => console.error(error),
+                };
+
+                // Listener para o botão de Cartão de Crédito
+                payWithCardBtn.addEventListener('click', async () => {
+                    paymentOptionsContainer.style.display = 'none';
+                    cardPaymentBrickContainer.style.display = 'block';
+                    await bricksBuilder.create('cardPayment', 'card-payment-brick_container', {
+                        initialization: { amount: 3.00, preferenceId: preferenceId },
+                        customization: { visual: { style: { theme: 'dark' } } },
+                        callbacks: cardPaymentCallbacks,
+                    });
                 });
 
-                // 5. OUVIR O EVENTO DE PAGAMENTO
+                // Listener para o botão de PIX
+                payWithPixBtn.addEventListener('click', async () => {
+                    paymentOptionsContainer.style.display = 'none';
+                    pixPaymentBrickContainer.style.display = 'block';
+                    await bricksBuilder.create('payment', 'pix-payment-brick_container', {
+                        initialization: { amount: 3.00, preferenceId: preferenceId },
+                        customization: {
+                            paymentMethods: {
+                                ticket: "hidden",
+                                creditCard: "hidden",
+                                debitCard: "hidden",
+                                bankTransfer: "all", // Mostra apenas PIX
+                            },
+                        },
+                        callbacks: {
+                            onReady: () => {},
+                            onSubmit: () => {}, // O brick de pagamento lida com isso sozinho
+                            onError: (error) => console.error(error)
+                        }
+                    });
+                });
+
+                // Listener global para o resultado do PIX (e outras redireções)
                 document.addEventListener('payment:submitted', async (e) => {
                     const { id: paymentId, status } = e.detail;
-                    
                     if (status === 'approved') {
-                        statusMessage.innerText = '✅ Pagamento Aprovado! Gerando seus jogos...';
-                        
-                        const gameResponse = await fetch(`${VERCEL_BACKEND_URL}/api/generate-games`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ paymentId })
-                        });
-
-                        if(gameResponse.ok){
-                            const { games } = await gameResponse.json();
-                            displayGames(games);
-                            paymentBrickContainer.innerHTML = '<p class="text-green-500 font-bold">Obrigado por jogar! Boa sorte! 🍀</p>';
-                        } else {
-                            statusMessage.innerText = 'Erro ao buscar jogos após pagamento.';
-                        }
-                    } else if (status === 'pending') {
-                        statusMessage.innerText = '⏳ Pagamento pendente. Aguarde a confirmação.';
+                        await handlePayment(paymentId);
                     } else {
-                        statusMessage.innerText = '❌ Pagamento rejeitado.';
+                         statusMessage.innerText = `Status do pagamento: ${status}.`;
                     }
                 });
 
             } catch (error) {
                 console.error(error);
-                statusMessage.innerText = 'Falha crítica na configuração. Recarregue a página.';
+                statusMessage.innerText = 'Falha crítica na configuração. Verifique o console e recarregue.';
             }
         }
-
-        // Inicia todo o processo
-        main();
+        
+        initializeApp();
     </script>
 </body>
 </html>
