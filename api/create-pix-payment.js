@@ -16,7 +16,9 @@ export default async function handler(request, response) {
         return response.status(400).json({ error: 'E-mail é obrigatório.' });
     }
 
-    const expirationDate = new Date(Date.now() + 30 * 60 * 1000).toISOString(); // 30 minutos
+    // --- ALTERAÇÃO APLICADA AQUI ---
+    // Calcula a data de expiração para 1 hora a partir de agora
+    const expirationDate = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hora
 
     const payment_data = {
         transaction_amount: 3.00,
