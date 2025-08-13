@@ -1,11 +1,19 @@
+// NOME DO ARQUIVO: api/create-pix-payment.js
+
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 
 // Inicializa o cliente com a sua chave secreta
-const client = new MercadoPagoConfig({ 
-    accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN 
+const client = new MercadoPagoConfig({
+    accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN
 });
 
 export default async function handler(request, response) {
+    // --- CORREÇÃO APLICADA AQUI ---
+    // Tratamento para a requisição de verificação (preflight) do CORS
+    if (request.method === 'OPTIONS') {
+        return response.status(200).send('OK');
+    }
+
     if (request.method !== 'POST') {
         return response.status(405).json({ error: 'Method Not Allowed' });
     }
@@ -16,8 +24,6 @@ export default async function handler(request, response) {
         return response.status(400).json({ error: 'E-mail é obrigatório.' });
     }
 
-    // --- ALTERAÇÃO APLICADA AQUI ---
-    // Calcula a data de expiração para 1 hora a partir de agora
     const expirationDate = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hora
 
     const payment_data = {
