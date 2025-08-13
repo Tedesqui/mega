@@ -59,7 +59,7 @@
                     <img id="pix-qr-code-image" src="" alt="QR Code PIX" class="mx-auto border-4 border-white rounded-lg">
                     <div class="flex">
                         <input type="text" id="pix-copy-paste-code" readonly class="w-full px-3 py-2 border border-gray-300 rounded-l-md dark:bg-gray-700 dark:border-gray-600">
-                        <button id="copy-pix-btn" class="bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 text-sm font-bold p-3 rounded-r-md">Copiar</button>
+                        <button id="copy-pix-btn" class="bg-green-600 hover:bg-green-700 text-white text-sm font-bold p-3 rounded-r-md">Copiar</button>
                     </div>
                     <p class="text-sm animate-pulse">Aguardando pagamento... Assim que for aprovado, seus números aparecerão acima.</p>
                 </div>
@@ -120,7 +120,7 @@
             clearInterval(paymentCheckInterval); // Para a verificação
             
             statusMessage.classList.add('hidden'); // Esconde mensagens de status
-            paymentArea.classList.add('hidden');   // Esconde TODA a área de pagamento
+            paymentArea.classList.add('hidden');    // Esconde TODA a área de pagamento
             subtitle.classList.add('hidden');      // Esconde o subtítulo inicial
 
             displayGames(games); // MOSTRA OS JOGOS
