@@ -1,7 +1,9 @@
+// NOME DO ARQUIVO: api/create-preference.js
+
 import { MercadoPagoConfig, Preference } from 'mercadopago';
 
-const client = new MercadoPagoConfig({ 
-    accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN 
+const client = new MercadoPagoConfig({
+    accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN
 });
 
 export default async function handler(request, response) {
@@ -9,7 +11,9 @@ export default async function handler(request, response) {
         return response.status(200).send('OK');
     }
 
-    const frontendUrl = 'https://SEU-USUARIO.github.io/SEU-REPO-FRONTEND/';
+    // --- CORREÇÃO APLICADA AQUI ---
+    const frontendUrl = 'https://www.numerosdeouro.com.br/'; // URL correta do seu site
+    
     const expirationDate = new Date(Date.now() + 30 * 60 * 1000).toISOString();
 
     try {
@@ -25,7 +29,6 @@ export default async function handler(request, response) {
                         currency_id: 'BRL',
                     },
                 ],
-                // O BLOCO 'payment_methods' FOI REMOVIDO PARA ESTE TESTE
                 back_urls: {
                     success: frontendUrl,
                     failure: frontendUrl,
