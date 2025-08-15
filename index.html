@@ -18,7 +18,6 @@
         @keyframes pop-in { to { opacity: 1; transform: scale(1); } }
         .hidden { display: none; }
         
-        /* --- CÓDIGO ADICIONADO AQUI --- */
         #main-container {
             position: relative;
             top: -10px;
@@ -39,7 +38,7 @@
         </div>
 
         <div id="final-message" class="hidden mb-6">
-             <p class="text-2xl text-green-500 font-bold">Obrigado! Boa sorte! 🍀</p>
+             <p class="text-2xl text-green-500 font-bold">Obrigado por jogar! Boa sorte! 🍀</p>
         </div>
 
         <div id="payment-area">
@@ -73,6 +72,11 @@
         <p class="text-xs text-gray-400 dark:text-gray-500 mt-6">
             Pagamento processado com segurança pelo Mercado Pago.
         </p>
+
+        <footer class="text-xs text-gray-500 dark:text-gray-400 mt-8 border-t border-gray-200 dark:border-gray-700 pt-4">
+            <p><b class="font-bold">ATENÇÃO:</b> Esse site não gera apostas diretamente no sistema da Caixa. Ele apenas gera os números para você apostar.</p>
+        </footer>
+        
     </div>
 
     <script>
@@ -85,7 +89,7 @@
         const finalMessage = document.getElementById('final-message');
         const gamesContainer = document.getElementById('games-container');
         const statusMessage = document.getElementById('status-message');
-        const paymentArea = document.getElementById('payment-area'); // <- Novo wrapper
+        const paymentArea = document.getElementById('payment-area');
         
         const payWithCardBtn = document.getElementById('pay-with-card-btn');
         const cardPaymentBrickContainer = document.getElementById('card-payment-brick_container');
@@ -103,7 +107,7 @@
         let paymentCheckInterval;
 
         function displayGames(games) {
-            gamesContainer.innerHTML = ''; // Limpa a mensagem "Seus jogos aparecerão aqui..."
+            gamesContainer.innerHTML = '';
             games.forEach((game) => {
                 const gameRow = document.createElement('div');
                 gameRow.className = 'game-row flex flex-wrap justify-center items-center';
@@ -117,18 +121,17 @@
             });
             gamesContainer.querySelectorAll('.number-circle').forEach((circle, index) => circle.style.animationDelay = `${index * 50}ms`);
         }
-
-        // Função CORRIGIDA que lida com o sucesso do pagamento
+        
         function onPaymentSuccess(games) {
-            clearInterval(paymentCheckInterval); // Para a verificação
+            clearInterval(paymentCheckInterval);
             
-            statusMessage.classList.add('hidden'); // Esconde mensagens de status
-            paymentArea.classList.add('hidden');   // Esconde TODA a área de pagamento
-            subtitle.classList.add('hidden');      // Esconde o subtítulo inicial
+            statusMessage.classList.add('hidden');
+            paymentArea.classList.add('hidden');
+            subtitle.classList.add('hidden');
 
-            displayGames(games); // MOSTRA OS JOGOS
+            displayGames(games);
             
-            finalMessage.classList.remove('hidden'); // MOSTRA A MENSAGEM DE OBRIGADO
+            finalMessage.classList.remove('hidden');
         }
 
         function startPaymentStatusCheck(paymentId) {
@@ -158,7 +161,6 @@
 
                 const mp = new MercadoPago(publicKey, { locale: 'pt-BR' });
 
-                // Lógica do Cartão de Crédito
                 payWithCardBtn.addEventListener('click', async () => {
                     document.getElementById('payment-options').classList.add('hidden');
                     cardPaymentBrickContainer.classList.remove('hidden');
@@ -196,7 +198,6 @@
                     });
                 });
 
-                // Lógica do Fluxo PIX
                 payWithPixBtn.addEventListener('click', () => {
                     document.getElementById('payment-options').classList.add('hidden');
                     pixPaymentContainer.classList.remove('hidden');
