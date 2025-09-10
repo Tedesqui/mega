@@ -1,5 +1,3 @@
-// NOME DO ARQUIVO: api/create-preference.js
-
 import { MercadoPagoConfig, Preference } from 'mercadopago';
 
 const client = new MercadoPagoConfig({
@@ -11,8 +9,7 @@ export default async function handler(request, response) {
         return response.status(200).send('OK');
     }
 
-    // --- CORREÇÃO APLICADA AQUI ---
-    const frontendUrl = 'https://www.numerosdeouro.com.br/'; // URL correta do seu site
+    const frontendUrl = 'https://www.numerosdeouro.com.br/';
     
     const expirationDate = new Date(Date.now() + 30 * 60 * 1000).toISOString();
 
@@ -22,8 +19,8 @@ export default async function handler(request, response) {
             body: {
                 items: [
                     {
-                        id: 'jogos-mega-sena-01',
-                        title: '5 Jogos Inteligentes da Mega-Sena',
+                        id: 'jogos-lotofacil-01',
+                        title: '5 Jogos Inteligentes da Lotofácil',
                         quantity: 1,
                         unit_price: 3.00,
                         currency_id: 'BRL',
@@ -45,3 +42,4 @@ export default async function handler(request, response) {
         response.status(500).json({ error: 'Falha ao criar preferência de pagamento.' });
     }
 }
+
