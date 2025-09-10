@@ -1,15 +1,10 @@
-// NOME DO ARQUIVO: api/create-pix-payment.js
-
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 
-// Inicializa o cliente com a sua chave secreta
 const client = new MercadoPagoConfig({
     accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN
 });
 
 export default async function handler(request, response) {
-    // --- CORREÇÃO APLICADA AQUI ---
-    // Tratamento para a requisição de verificação (preflight) do CORS
     if (request.method === 'OPTIONS') {
         return response.status(200).send('OK');
     }
@@ -28,7 +23,7 @@ export default async function handler(request, response) {
 
     const payment_data = {
         transaction_amount: 3.00,
-        description: '5 Jogos Inteligentes da Mega-Sena',
+        description: '5 Jogos Inteligentes da Lotofácil',
         payment_method_id: 'pix',
         payer: {
             email: email,
@@ -40,7 +35,6 @@ export default async function handler(request, response) {
         const payment = new Payment(client);
         const result = await payment.create({ body: payment_data });
 
-        // Envia de volta os dados essenciais para o frontend
         response.status(201).json({
             paymentId: result.id,
             qrCode: result.point_of_interaction.transaction_data.qr_code,
@@ -52,3 +46,4 @@ export default async function handler(request, response) {
         response.status(500).json({ error: 'Falha ao gerar o pagamento PIX.' });
     }
 }
+
