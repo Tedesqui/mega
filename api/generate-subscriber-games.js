@@ -1,4 +1,10 @@
-import { kv } from '@vercel/kv';
+import { createClient } from "@vercel/kv";
+
+// Inicializa o cliente KV para comunicar com a base de dados Upstash
+const kv = createClient({
+  url: process.env.UPSTASH_REDIS_REST_URL,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN,
+});
 
 function generateGamesLogic() {
     const mostFrequentNumbers = [20, 10, 25, 11, 24, 13, 14, 4, 3, 2, 12, 1, 19, 5, 22, 18, 9, 15];
@@ -38,3 +44,4 @@ export default async function handler(request, response) {
         return response.status(500).json({ error: 'Falha ao gerar jogos.' });
     }
 }
+
