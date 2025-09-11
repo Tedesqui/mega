@@ -253,10 +253,17 @@
             getEl('card-payment-brick_container').classList.remove('hidden');
             statusMessage.textContent = 'Carregando formulário de cartão...';
 
+            const payload = {
+                email: userEmail,
+                amount: selectedPlan.amount,
+                description: selectedPlan.description,
+                planType: selectedPlan.type 
+            };
+
             const response = await fetch(`${VERCEL_BACKEND_URL}/api/create-preference`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...selectedPlan, email: userEmail })
+                body: JSON.stringify(payload)
             });
             const { preferenceId } = await response.json();
 
@@ -283,10 +290,17 @@
             pixContainer.innerHTML = `<p>Gerando PIX...</p>`;
             
             try {
+                const payload = {
+                    email: userEmail,
+                    amount: selectedPlan.amount,
+                    description: selectedPlan.description,
+                    planType: selectedPlan.type
+                };
+
                 const response = await fetch(`${VERCEL_BACKEND_URL}/api/create-pix-payment`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ ...selectedPlan, email: userEmail })
+                    body: JSON.stringify(payload)
                 });
 
                 if (!response.ok) {
