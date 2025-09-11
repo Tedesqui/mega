@@ -1,6 +1,7 @@
 import { kv } from '@vercel/kv';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 
+// Mantém os valores de teste para os planos.
 const plans = {
     single: { amount: 1.00 },
     monthly: { amount: 1.00 }
@@ -8,6 +9,7 @@ const plans = {
 
 const client = new MercadoPagoConfig({ accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN });
 
+// Função interna para gerar jogos.
 function generateGamesLogic() {
     const mostFrequentNumbers = [20, 10, 25, 11, 24, 13, 14, 4, 3, 2, 12, 1, 19, 5, 22, 18, 9, 15];
     return Array.from({ length: 5 }, () => {
@@ -54,7 +56,19 @@ export default async function handler(request, response) {
         }
 
     } catch (error) {
-        console.error('Erro ao verificar pagamento:', error);
+        // <-- ALTERAÇÃO: Log de erro melhorado para depuração na Vercel
+        console.error('--- ERRO DETALHADO AO VERIFICAR PAGAMENTO ---');
+        console.error('Mensagem:', error.message);
+        // O 'error.cause' frequentemente contém a resposta da API do Mercado Pago
+        if (error.cause) {
+            console.error('Causa (Resposta da API):', JSON.stringify(error.cause, null, 2));
+        } else {
+            console.error('Objeto de erro completo:', JSON.stringify(error, null, 2));
+        }
+        console.error('--- FIM DO ERRO DETALHADO ---');
+        
+        // A mensagem para o utilizador continua a mesma, para não expor detalhes sensíveis.
         return response.status(500).json({ error: 'Falha ao verificar o estado do pagamento.' });
     }
 }
+
