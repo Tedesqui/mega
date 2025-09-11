@@ -289,7 +289,8 @@
                 // Pega a chave pública do backend para inicializar o Mercado Pago
                 const configResponse = await fetch(`${VERCEL_BACKEND_URL}/api/get-config`);
                 if (!configResponse.ok) throw new Error("Falha ao carregar as configurações do servidor.");
-                const { publicKey } = await response.json();
+                // <-- CORREÇÃO: A variável estava errada. O correto é 'configResponse'.
+                const { publicKey } = await configResponse.json(); 
                 if (!publicKey) throw new Error("A chave pública do Mercado Pago não foi recebida.");
                 mp = new MercadoPago(publicKey);
 
@@ -353,4 +354,3 @@
     </script>
 </body>
 </html>
-
