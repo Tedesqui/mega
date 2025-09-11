@@ -1,42 +1,37 @@
 import { kv } from '@vercel/kv';
 
-// Reutilizamos a mesma lógica de geração de jogos
-const generateFiveGames = () => {
+function generateGamesLogic() {
     const mostFrequentNumbers = [20, 10, 25, 11, 24, 13, 14, 4, 3, 2, 12, 1, 19, 5, 22, 18, 9, 15];
-    const pool = Array.from({ length: 25 }, (_, i) => i + 1);
-    mostFrequentNumbers.forEach(num => {
-        for (let i = 0; i < 4; i++) { pool.push(num); }
-    });
-    
-    const games = [];
-    for (let i = 0; i < 5; i++) {
+    return Array.from({ length: 5 }, () => {
+        const pool = Array.from({ length: 25 }, (_, i) => i + 1);
+        mostFrequentNumbers.forEach(num => { for (let i = 0; i < 4; i++) pool.push(num); });
         const selectedNumbers = new Set();
         while (selectedNumbers.size < 15) {
-            const randomIndex = Math.floor(Math.random() * pool.length);
-            selectedNumbers.add(pool[randomIndex]);
+            selectedNumbers.add(pool[Math.floor(Math.random() * pool.length)]);
         }
-        games.push(Array.from(selectedNumbers).sort((a, b) => a - b));
-    }
-    return games;
-};
+        return Array.from(selectedNumbers).sort((a, b) => a - b);
+    });
+}
 
 export default async function handler(request, response) {
     if (request.method !== 'POST') {
-        return response.status(405).json({ error: 'Method Not Allowed' });
+        return response.status(405).json({ error: 'Método Não Permitido' });
     }
-
+    
     const { email } = request.body;
     if (!email) {
-        return response.status(400).json({ error: 'Email é obrigatório para gerar jogos.' });
+        return response.status(400).json({ error: 'O e-mail é obrigatório.' });
     }
 
     try {
-        const subscription = await kv.get(email.toLowerCase());
-        if (subscription && subscription.active && new Date(subscription.expiresAt) > new Date()) {
-            const games = generateFiveGames();
+        const accessPass = await kv.get(email.toLowerCase());
+        const now = new Date();
+
+        if (accessPass && new Date(accessPass.expiresAt) > now) {
+            const games = generateGamesLogic();
             return response.status(200).json({ games });
         } else {
-            return response.status(403).json({ error: 'Assinatura não encontrada ou expirada.' });
+            return response.status(403).json({ error: 'Acesso negado. O seu acesso pode ter expirado.' });
         }
     } catch (error) {
         console.error('Erro ao gerar jogos de assinante:', error);
