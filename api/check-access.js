@@ -1,4 +1,10 @@
-import { kv } from '@vercel/kv';
+import { createClient } from "@vercel/kv";
+
+// Inicializa o cliente KV para comunicar com a base de dados Upstash
+const kv = createClient({
+  url: process.env.UPSTASH_REDIS_REST_URL,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN,
+});
 
 export default async function handler(request, response) {
     if (request.method !== 'POST') {
@@ -33,3 +39,4 @@ export default async function handler(request, response) {
         return response.status(500).json({ error: 'Falha ao consultar o acesso.' });
     }
 }
+
