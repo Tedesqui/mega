@@ -268,7 +268,9 @@
                 if (retries > 1) {
                     setTimeout(() => checkSubscription(retries - 1), 2000);
                 } else {
-                    statusMessage.textContent = 'Não foi possível verificar sua sessão. Por favor, escolha um plano para continuar.';
+                    // CORREÇÃO: Não mostra mais uma mensagem de erro para o usuário.
+                    // Apenas loga o erro no console e mostra a tela de planos como se fosse um novo usuário.
+                    console.error("Todas as tentativas de verificação de assinatura falharam. Exibindo seleção de planos.");
                     showView('plan-selection-view');
                 }
             }
@@ -365,4 +367,3 @@
     </script>
 </body>
 </html>
-
