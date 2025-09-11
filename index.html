@@ -157,14 +157,15 @@
                 userEmail = data.email;
                 checkSubscription();
             } else {
-                displayGames(data.games);
                 finalMessage.classList.remove('hidden');
+                displayGames(data.games);
             }
         }
 
         function startPaymentStatusCheck(paymentId) {
             statusMessage.textContent = 'Aguardando confirmação do pagamento...';
-            paymentCheckInterval = setInterval(async () => {
+            
+            const checkStatus = async () => {
                 try {
                     const response = await fetch(`${VERCEL_BACKEND_URL}/api/generate-games`, {
                         method: 'POST',
@@ -182,7 +183,13 @@
                     clearInterval(paymentCheckInterval);
                     statusMessage.textContent = 'Erro de conexão ao verificar o pagamento.';
                 }
-            }, 5000);
+            };
+
+            // Adiciona um atraso inicial de 3 segundos antes da primeira verificação
+            setTimeout(() => {
+                checkStatus(); // Primeira verificação
+                paymentCheckInterval = setInterval(checkStatus, 5000); // Verificações seguintes
+            }, 3000);
         }
 
         async function generateSubscriberGames() {
@@ -266,8 +273,8 @@
                 
                 const data = await response.json();
 
-                if (!data.qrCodeBase64) {
-                    throw new Error('A resposta do servidor não incluiu um QR Code. Tente novamente.');
+                if (!data.qrCodeBase64 || !data.paymentId) { // Validação extra
+                    throw new Error('A resposta do servidor está incompleta. Tente novamente.');
                 }
                 
                 pixContainer.innerHTML = `
@@ -295,7 +302,6 @@
 
         // --- INICIALIZAÇÃO E EVENT LISTENERS ---
         document.addEventListener('DOMContentLoaded', async () => {
-            // CORREÇÃO: Inicializa o SDK do Mercado Pago assim que a página carrega.
             try {
                 const configResponse = await fetch(`${VERCEL_BACKEND_URL}/api/get-config`); 
                 const { publicKey } = await configResponse.json();
@@ -303,7 +309,7 @@
             } catch(e) {
                 console.error("Falha ao inicializar o SDK do Mercado Pago.", e);
                 statusMessage.textContent = 'Erro ao carregar o sistema de pagamento. Recarregue a página.';
-                return; // Impede a execução do resto do script se a inicialização falhar.
+                return;
             }
 
             getEl('single-play-btn').addEventListener('click', () => {
@@ -328,4 +334,3 @@
     </script>
 </body>
 </html>
-
