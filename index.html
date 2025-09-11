@@ -295,6 +295,17 @@
 
         // --- INICIALIZAÇÃO E EVENT LISTENERS ---
         document.addEventListener('DOMContentLoaded', async () => {
+            // CORREÇÃO: Inicializa o SDK do Mercado Pago assim que a página carrega.
+            try {
+                const configResponse = await fetch(`${VERCEL_BACKEND_URL}/api/get-config`); 
+                const { publicKey } = await configResponse.json();
+                mp = new MercadoPago(publicKey);
+            } catch(e) {
+                console.error("Falha ao inicializar o SDK do Mercado Pago.", e);
+                statusMessage.textContent = 'Erro ao carregar o sistema de pagamento. Recarregue a página.';
+                return; // Impede a execução do resto do script se a inicialização falhar.
+            }
+
             getEl('single-play-btn').addEventListener('click', () => {
                 selectedPlan = plans.single;
                 showView('email-view');
@@ -317,3 +328,4 @@
     </script>
 </body>
 </html>
+
