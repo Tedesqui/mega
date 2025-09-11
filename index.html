@@ -75,7 +75,11 @@
         </div>
         
         <div id="games-container" class="my-8 min-h-[100px]"> <p class="text-gray-500 font-bold">Seus jogos aparecerão aqui.</p> </div>
-        <div id="final-message" class="hidden mb-6"> <p class="text-2xl text-purple-500 font-bold">Pagamento aprovado! Boa sorte! 🍀</p> </div>
+        
+        <div id="final-message" class="hidden mb-6"> 
+             <p class="text-2xl text-purple-500 font-bold">Pagamento aprovado!<br>Boa sorte! 🍀</p>
+        </div>
+        
         <div id="status-message" class="mt-4 text-sm font-semibold"></div>
         <p class="text-xs text-gray-400 mt-6"> Pagamento processado com segurança pelo Mercado Pago. </p>
 
@@ -123,13 +127,6 @@
             if (viewId) getEl(id).classList.remove('hidden');
         }
 
-        function displayGames(games) { /* ... (código sem alteração) ... */ }
-        function onPaymentSuccess(data) { /* ... (código sem alteração) ... */ }
-        function startPaymentStatusCheck(paymentId) { /* ... (código sem alteração) ... */ }
-        async function createPixPayment() { /* ... (código sem alteração) ... */ }
-        
-        // --- REFAZENDO AS FUNÇÕES COM A NOVA LÓGICA ---
-        
         function displayGames(games) {
             gamesContainer.innerHTML = '';
             games.forEach((game, gameIndex) => {
@@ -236,7 +233,7 @@
             }
         }
 
-        // --- NOVA FUNÇÃO PRINCIPAL QUE VERIFICA O ACESSO NO NAVEGADOR ---
+        // --- FUNÇÃO PRINCIPAL QUE VERIFICA O ACESSO NO NAVEGADOR ---
         function checkSubscription() {
             const accessPassJSON = localStorage.getItem('lotofacilAccessPass');
             if (!accessPassJSON) {
