@@ -90,10 +90,10 @@
 
     <script>
         // --- CONFIGURAÇÃO ---
-        const VERCEL_BACKEND_URL = '';
+        const VERCEL_BACKEND_URL = 'https://SEU-BACKEND.vercel.app'; // <-- COLOQUE A URL CORRETA AQUI
         const plans = {
-            single: { type: 'single', amount: 1.00, title: 'Jogada Única (Teste)', description: '5 Jogos Inteligentes da Lotofácil' },
-            monthly: { type: 'monthly', amount: 1.00, title: 'Acesso 30 Dias (Teste)', description: 'Acesso ilimitado por 30 dias' }
+            single: { type: 'single', amount: 3.00, title: 'Jogada Única', description: '5 Jogos Inteligentes da Lotofácil' },
+            monthly: { type: 'monthly', amount: 29.90, title: 'Acesso por 30 Dias', description: 'Acesso ilimitado por 30 dias' }
         };
         let selectedPlan = {};
         let userEmail = localStorage.getItem('lotofacilUserEmail') || '';
@@ -106,10 +106,10 @@
         const gamesContainer = getEl('games-container');
         const statusMessage = getEl('status-message');
 
-        // --- LÓGICA DE GERAÇÃO DE JOGOS (agora no frontend) ---
+        // --- LÓGICA DE GERAÇÃO DE JOGOS (executada no navegador) ---
         function generateLotofacilGames() {
-             const mostFrequentNumbers = [20, 10, 25, 11, 24, 13, 14, 4, 3, 2, 12, 1, 19, 5, 22, 18, 9, 15];
-             const games = Array.from({ length: 5 }, () => {
+            const mostFrequentNumbers = [20, 10, 25, 11, 24, 13, 14, 4, 3, 2, 12, 1, 19, 5, 22, 18, 9, 15];
+            const games = Array.from({ length: 5 }, () => {
                 const pool = Array.from({length: 25}, (_, i) => i + 1);
                 mostFrequentNumbers.forEach(num => { for (let i = 0; i < 4; i++) pool.push(num); });
                 const selectedNumbers = new Set();
@@ -117,14 +117,14 @@
                     selectedNumbers.add(pool[Math.floor(Math.random() * pool.length)]);
                 }
                 return Array.from(selectedNumbers).sort((a, b) => a - b);
-             });
-             displayGames(games);
+            });
+            displayGames(games);
         }
 
         // --- CONTROLE DE EXIBIÇÃO ---
         function showView(viewId) {
             allViews.forEach(id => getEl(id).classList.add('hidden'));
-            if (viewId) getEl(id).classList.remove('hidden');
+            if (viewId) getEl(viewId).classList.remove('hidden');
         }
 
         function displayGames(games) {
@@ -142,26 +142,28 @@
                 gamesContainer.appendChild(gameRow);
             });
         }
-
+        
+        // --- FUNÇÕES DE PAGAMENTO E VERIFICAÇÃO ---
         function onPaymentSuccess(data) {
             clearInterval(paymentCheckInterval);
             statusMessage.textContent = '';
             
+            // Salva o e-mail para preencher o campo da próxima vez
+            localStorage.setItem('lotofacilUserEmail', data.email);
+            userEmail = data.email;
+
             if (data.subscription) {
-                // Pagamento do PASSE DE 30 DIAS foi aprovado!
+                // Pagamento do PASSE DE 30 DIAS aprovado!
+                // **NOVO**: Salva o passe de acesso no localStorage
                 const expiryDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
                 const accessPass = { expiresAt: expiryDate.toISOString() };
                 localStorage.setItem('lotofacilAccessPass', JSON.stringify(accessPass));
-                
-                // Salva o e-mail também, para preencher o campo da próxima vez
-                localStorage.setItem('lotofacilUserEmail', data.email);
-                userEmail = data.email;
                 
                 // Atualiza a UI para a visão de assinante
                 checkSubscription();
 
             } else if (data.games) {
-                // Pagamento de JOGADA ÚNICA foi aprovado!
+                // Pagamento de JOGADA ÚNICA aprovado!
                 showView(null);
                 getEl('final-message').classList.remove('hidden');
                 displayGames(data.games);
@@ -263,19 +265,26 @@
         // --- INICIALIZAÇÃO E EVENTOS ---
         document.addEventListener('DOMContentLoaded', async () => {
             showView('loading-view');
+             if (!VERCEL_BACKEND_URL || VERCEL_BACKEND_URL.includes('SEU-BACKEND')) {
+                 statusMessage.textContent = 'Erro de configuração: URL do backend não definida no script.';
+                 console.error("ERRO: A constante VERCEL_BACKEND_URL não foi definida.");
+                 showView(null);
+                 return;
+            }
+
             try {
                 const configResponse = await fetch(`${VERCEL_BACKEND_URL}/api/get-config`);
-                if (!configResponse.ok) throw new Error("Falha ao carregar configs.");
+                if (!configResponse.ok) throw new Error("Falha ao carregar configurações do servidor.");
                 const { publicKey } = await configResponse.json();
-                if (!publicKey) throw new Error("Chave pública inválida.");
+                if (!publicKey) throw new Error("Chave pública do Mercado Pago não recebida.");
                 mp = new MercadoPago(publicKey);
 
-                // A MÁGICA ACONTECE AQUI: verifica o acesso salvo no navegador
+                // Verifica o acesso salvo no localStorage
                 checkSubscription();
 
             } catch(e) {
                 console.error("Falha ao inicializar.", e);
-                statusMessage.textContent = 'Erro ao carregar o sistema. Recarregue a página.';
+                statusMessage.textContent = 'Erro ao carregar o sistema. Verifique a URL do backend e recarregue a página.';
                 showView(null);
             }
 
@@ -297,6 +306,7 @@
                 createPixPayment();
             });
 
+            // **ATUALIZADO**: Botão agora chama a função local diretamente
             getEl('generate-new-games-btn').addEventListener('click', generateLotofacilGames);
         });
     </script>
