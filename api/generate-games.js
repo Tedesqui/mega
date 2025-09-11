@@ -6,7 +6,7 @@ const plans = {
     single: { amount: 1.00 },
     monthly: { amount: 1.00 }
 };
-
+// Forçando novo deploy
 const client = new MercadoPagoConfig({ accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN });
 
 // Função interna para gerar jogos.
