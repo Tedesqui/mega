@@ -13,22 +13,30 @@ export default async function handler(request, response) {
         return response.status(405).json({ error: 'Method Not Allowed' });
     }
 
-    const { email } = request.body;
+    const { email, amount, description, planType } = request.body;
 
-    if (!email) {
-        return response.status(400).json({ error: 'E-mail é obrigatório.' });
+    if (!email || !amount || !description || !planType) {
+        return response.status(400).json({ error: 'Campos obrigatórios ausentes: email, amount, description, planType.' });
+    }
+
+    if (parseFloat(amount) !== 3.00 && parseFloat(amount) !== 29.90) {
+        return response.status(400).json({ error: 'Valor de transação inválido.' });
     }
 
     const expirationDate = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hora
 
     const payment_data = {
-        transaction_amount: 3.00,
-        description: '5 Jogos Inteligentes da Lotofácil',
+        transaction_amount: Number(amount),
+        description: description,
         payment_method_id: 'pix',
         payer: {
             email: email,
         },
         date_of_expiration: expirationDate,
+        metadata: {
+            plan_type: planType,
+            user_email: email.toLowerCase()
+        }
     };
 
     try {
@@ -42,8 +50,7 @@ export default async function handler(request, response) {
         });
 
     } catch (error) {
-        console.error('Erro ao criar pagamento PIX:', error);
+        console.error('Erro ao criar pagamento PIX:', error.cause || error);
         response.status(500).json({ error: 'Falha ao gerar o pagamento PIX.' });
     }
 }
-
