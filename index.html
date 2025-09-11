@@ -157,6 +157,8 @@
         
         function startPaymentStatusCheck(paymentId) {
             statusMessage.textContent = 'A aguardar a confirmação do pagamento...';
+            const pixContainer = getEl('pix-view');
+
             const checkStatus = async () => {
                 try {
                     const response = await fetch(`${VERCEL_BACKEND_URL}/api/generate-games`, {
@@ -170,11 +172,19 @@
                     } else if (response.status !== 402) { // 402 significa "Pagamento Necessário" (ainda pendente)
                         clearInterval(paymentCheckInterval);
                         const errorData = await response.json().catch(() => ({ error: "Erro desconhecido." }));
-                        statusMessage.textContent = `Erro: ${errorData.error || 'Falha ao verificar.'}`;
+                        statusMessage.textContent = ''; // Limpa a mensagem de status simples
+                        pixContainer.innerHTML = `<p class="text-red-500 font-semibold">Ocorreu um erro ao verificar o seu pagamento.</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">Detalhe: ${errorData.error || 'Falha na comunicação.'}</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">Isto pode ser um problema temporário ou de configuração. Por favor, tente gerar um novo pagamento.</p>
+                        <button onclick="showView('email-view')" class="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-lg mt-4">↩️ Voltar</button>`;
                     }
                 } catch (error) { 
                     console.error('Erro de conexão ao verificar pagamento.', error);
-                    // Opcional: pode-se adicionar uma mensagem para o utilizador aqui, se desejado
+                    clearInterval(paymentCheckInterval);
+                    statusMessage.textContent = '';
+                    pixContainer.innerHTML = `<p class="text-red-500 font-semibold">Erro de conexão.</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">Não foi possível comunicar com o servidor. Verifique a sua ligação à Internet e tente novamente.</p>
+                    <button onclick="showView('email-view')" class="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-lg mt-4">↩️ Voltar</button>`;
                 }
             };
             setTimeout(() => {
@@ -279,7 +289,7 @@
                 // Pega a chave pública do backend para inicializar o Mercado Pago
                 const configResponse = await fetch(`${VERCEL_BACKEND_URL}/api/get-config`);
                 if (!configResponse.ok) throw new Error("Falha ao carregar as configurações do servidor.");
-                const { publicKey } = await configResponse.json();
+                const { publicKey } = await response.json();
                 if (!publicKey) throw new Error("A chave pública do Mercado Pago não foi recebida.");
                 mp = new MercadoPago(publicKey);
 
