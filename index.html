@@ -55,7 +55,7 @@
                  <div id="single-play-btn" class="plan-card cursor-pointer bg-blue-500 dark:bg-blue-700 text-white p-6 rounded-lg shadow-md">
                      <h3 class="text-lg font-bold text-white">Jogada Única</h3>
                      <p class="text-3xl font-bold my-2">R$ 3,00</p>
-                     <p class="text-sm text-white/90 dark:text-white/90 font-bold">Receba 5 jogos gerados por nossa Inteligência Artificial.</p>
+                     <p class="text-sm text-white/90 dark:text-white/90 font-bold">Receba 5 jogos gerados por nossa inteligência artificial.</p>
                  </div>
                  <div id="monthly-play-btn" class="plan-card cursor-pointer bg-green-500 dark:bg-green-700 text-white p-6 rounded-lg shadow-md">
                      <h3 class="text-lg font-bold text-white">Acesso Mensal ✨</h3>
@@ -69,19 +69,12 @@
             <h3 id="email-title" class="font-semibold text-lg mb-4">Informe seu e-mail para continuar</h3>
             <form id="email-form" class="space-y-4">
                 <input type="email" id="user-email" placeholder="seuemail@exemplo.com" required class="w-full px-3 py-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600">
-                <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg">Prosseguir para Pagamento</button>
-                <button type="button" id="back-to-plans-btn" class="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg mt-2">↩️ Voltar</button>
+                <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg">Prosseguir para Pagamento PIX</button>
             </form>
         </div>
         
-        <div id="payment-view" class="hidden my-8">
-            <h3 id="payment-title" class="font-semibold text-lg mb-4"></h3>
-            <div id="payment-options" class="space-y-4">
-                <button id="pay-with-card-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg">💳 Pagar com Cartão</button>
-                <button id="pay-with-pix-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg">✨ Pagar com PIX</button>
-            </div>
-            <div id="card-payment-brick_container" class="hidden mt-6"></div>
-            <div id="pix-payment-container" class="hidden mt-6"></div>
+        <div id="pix-view" class="hidden my-8">
+            <!-- Conteúdo do PIX será injetado aqui -->
         </div>
 
         <div id="subscriber-view" class="hidden my-8">
@@ -122,7 +115,7 @@
         let mp; // Instância do Mercado Pago
 
         // --- ELEMENTOS DA UI ---
-        const allViews = ['loading-view', 'plan-selection-view', 'email-view', 'payment-view', 'subscriber-view'];
+        const allViews = ['loading-view', 'plan-selection-view', 'email-view', 'pix-view', 'subscriber-view'];
         const getEl = (id) => document.getElementById(id);
         const subtitle = getEl('subtitle');
         const finalMessage = getEl('final-message');
@@ -157,7 +150,7 @@
         function onPaymentSuccess(data) {
             clearInterval(paymentCheckInterval);
             statusMessage.textContent = '';
-            getEl('payment-view').classList.add('hidden');
+            showView('subscriber-view'); // Fallback, a lógica principal está no checkSubscription
 
             if (data.subscription) {
                 localStorage.setItem('lotofacilUserEmail', data.email);
@@ -246,47 +239,10 @@
                 statusMessage.textContent = 'Não foi possível verificar a assinatura. Tente recarregar a página.';
             }
         }
-
-        // --- INICIALIZAÇÃO DE PAGAMENTOS ---
-        async function renderCardBrick(containerId) {
-            getEl('payment-options').classList.add('hidden');
-            getEl('card-payment-brick_container').classList.remove('hidden');
-            statusMessage.textContent = 'Carregando formulário de cartão...';
-
-            const payload = {
-                email: userEmail,
-                amount: selectedPlan.amount,
-                description: selectedPlan.description,
-                planType: selectedPlan.type 
-            };
-
-            const response = await fetch(`${VERCEL_BACKEND_URL}/api/create-preference`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            const { preferenceId } = await response.json();
-
-            const bricksBuilder = mp.bricks();
-            await bricksBuilder.create('cardPayment', containerId, {
-                initialization: { amount: selectedPlan.amount, preferenceId: preferenceId },
-                callbacks: {
-                    onSubmit: async ({ formData }) => {
-                        // O pagamento é processado no backend, precisamos apenas do paymentId
-                        // A API V1 de payments não retorna o ID no onSubmit, então vamos usar o status do brick
-                        // e aguardar a confirmação pela verificação de status.
-                        // Esta abordagem é mais simples e compatível com o fluxo de PIX.
-                    },
-                    onReady: () => statusMessage.textContent = '',
-                    onError: (error) => statusMessage.textContent = 'Erro no formulário de pagamento.',
-                },
-            });
-        }
         
         async function createPixPayment() {
-            getEl('payment-options').classList.add('hidden');
-            const pixContainer = getEl('pix-payment-container');
-            pixContainer.classList.remove('hidden');
+            showView('pix-view');
+            const pixContainer = getEl('pix-view');
             pixContainer.innerHTML = `<p>Gerando PIX...</p>`;
             
             try {
@@ -315,8 +271,9 @@
                 }
                 
                 pixContainer.innerHTML = `
+                    <h3 class="font-semibold text-lg mb-4">Finalizar Pagamento: ${selectedPlan.title}</h3>
                     <p class="font-semibold">Escaneie o QR Code ou use o Copia e Cola:</p>
-                    <img src="data:image/png;base64,${data.qrCodeBase64}" alt="QR Code PIX" class="mx-auto border-4 border-white rounded-lg">
+                    <img src="data:image/png;base64,${data.qrCodeBase64}" alt="QR Code PIX" class="mx-auto border-4 border-white rounded-lg my-4">
                     <div class="flex">
                         <input type="text" id="pix-copy-paste-code" readonly value="${data.qrCode}" class="w-full px-3 py-2 border border-gray-300 rounded-l-md dark:bg-gray-700 dark:border-gray-600">
                         <button id="copy-pix-btn" class="bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold p-3 rounded-r-md">Copiar</button>
@@ -330,23 +287,14 @@
 
                 startPaymentStatusCheck(data.paymentId);
             } catch (error) {
-                pixContainer.innerHTML = `<p class="text-red-500">${error.message}</p>`;
+                pixContainer.innerHTML = `<p class="text-red-500">${error.message}</p>
+                <button type="button" id="back-to-email-btn" class="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg mt-4">↩️ Tentar Novamente</button>`;
+                getEl('back-to-email-btn').addEventListener('click', () => showView('email-view'));
             }
         }
 
         // --- INICIALIZAÇÃO E EVENT LISTENERS ---
         document.addEventListener('DOMContentLoaded', async () => {
-            try {
-                const configResponse = await fetch(`${VERCEL_BACKEND_URL}/api/get-config`); // Supondo que você tenha um endpoint para a chave pública
-                const { publicKey } = await configResponse.json();
-                mp = new MercadoPago(publicKey);
-            } catch(e) {
-                // Fallback para uma chave pública hardcoded se a API falhar (não recomendado para produção)
-                // Substitua PELA SUA PUBLIC KEY
-                // mp = new MercadoPago('SUA_PUBLIC_KEY_AQUI');
-                console.warn("API de config não encontrada. Usando fallback de chave pública.");
-            }
-
             getEl('single-play-btn').addEventListener('click', () => {
                 selectedPlan = plans.single;
                 showView('email-view');
@@ -356,17 +304,11 @@
                 showView('email-view');
             });
 
-            getEl('back-to-plans-btn').addEventListener('click', () => showView('plan-selection-view'));
-
             getEl('email-form').addEventListener('submit', (e) => {
                 e.preventDefault();
                 userEmail = getEl('user-email').value;
-                getEl('payment-title').textContent = `Finalizar Pagamento: ${selectedPlan.title} - R$ ${selectedPlan.amount.toFixed(2).replace('.', ',')}`;
-                showView('payment-view');
+                createPixPayment();
             });
-
-            getEl('pay-with-card-btn').addEventListener('click', () => renderCardBrick('card-payment-brick_container'));
-            getEl('pay-with-pix-btn').addEventListener('click', createPixPayment);
 
             getEl('generate-new-games-btn').addEventListener('click', generateSubscriberGames);
             
@@ -375,4 +317,3 @@
     </script>
 </body>
 </html>
-
