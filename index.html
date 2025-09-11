@@ -3,18 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Números Inteligente para a Lotofácil - Aumente suas chances de GANHAR!!!</title>
+    <title>Gerador de Números Inteligente para a Lotofácil - Aumente as suas chances de GANHAR!!!</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://sdk.mercadopago.com/js/v2"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
-        .number-circle { width: 45px; height: 45px; margin: 3px; font-size: 1rem; animation: pop-in 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; opacity: 0; transform: scale(0.5); }
+        .number-circle {
+            width: 45px; height: 45px; margin: 3px;
+            font-size: 1rem;
+            animation: pop-in 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+            opacity: 0; transform: scale(0.5);
+        }
         .game-row { margin-bottom: 1rem; padding: 0.5rem; background-color: rgba(255, 255, 255, 0.05); border-radius: 8px; }
         @keyframes pop-in { to { opacity: 1; transform: scale(1); } }
         .hidden { display: none; }
         .plan-card { border: 2px solid transparent; transition: all 0.3s ease; }
         .plan-card:hover { transform: translateY(-5px); border-color: #8B5CF6; }
+
+        /* <-- ALTERAÇÃO: Adicionado para remover o 'X' do campo de e-mail */
+        input[type="email"]::-webkit-search-decoration,
+        input[type="email"]::-webkit-search-cancel-button,
+        input[type="email"]::-webkit-search-results-button,
+        input[type="email"]::-webkit-search-results-decoration {
+            -webkit-appearance:none;
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 flex justify-center md:items-center min-h-screen md:p-4">
@@ -26,21 +39,23 @@
         </div>
 
         <h1 class="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-2">
-            <span class="block">Gerador Inteligente</span> <span class="block">Lotofácil</span>
+            <span class="block">Gerador Inteligente</span>
+            <span class="block">Lotofácil</span>
         </h1>
         <p id="subtitle" class="text-gray-600 dark:text-gray-400 mb-6">
-            <span class="block">Números gerados com base nas dezenas que mais saem!</span> <span class="block font-bold">Aumente suas chances de GANHAR!</span>
+            <span class="block">Números gerados com base nas dezenas que mais saem!</span>
+            <span class="block font-bold">Aumente as suas chances de GANHAR!</span>
         </p>
         
-        <div id="loading-view" class="my-8"> <p>Verificando seu acesso...</p> </div>
+        <div id="loading-view" class="my-8"> <p>A verificar o seu acesso...</p> </div>
 
         <div id="plan-selection-view" class="hidden my-8">
-             <h2 class="text-xl font-bold mb-6">Escolha seu plano:</h2>
+             <h2 class="text-xl font-bold mb-6">Escolha o seu plano:</h2>
              <div class="grid md:grid-cols-2 gap-6">
                  <div id="single-play-btn" class="plan-card cursor-pointer bg-blue-500 dark:bg-blue-700 text-white p-6 rounded-lg shadow-md">
                      <h3 class="text-lg font-bold text-white">Jogada Única</h3>
                      <p class="text-3xl font-bold my-2">R$ 3,00</p>
-                     <p class="text-sm text-white/90 font-bold">Receba 5 jogos gerados por nossa IA.</p>
+                     <p class="text-sm text-white/90 font-bold">Receba 5 jogos gerados pela nossa IA.</p>
                  </div>
                  <div id="monthly-play-btn" class="plan-card cursor-pointer bg-green-500 dark:bg-green-700 text-white p-6 rounded-lg shadow-md">
                      <h3 class="text-lg font-bold text-white">Acesso por 30 Dias ✨</h3>
@@ -51,7 +66,7 @@
         </div>
 
         <div id="email-view" class="hidden my-8">
-            <h3 id="email-title" class="font-semibold text-lg mb-4">Informe seu e-mail para continuar</h3>
+            <h3 id="email-title" class="font-semibold text-lg mb-4">Informe o seu e-mail para continuar</h3>
             <form id="email-form" class="space-y-4">
                 <input type="email" id="user-email" placeholder="seuemail@exemplo.com" required class="w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600">
                 <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg">Prosseguir para Pagamento PIX</button>
@@ -61,14 +76,18 @@
         <div id="pix-view" class="hidden my-8"> </div>
 
         <div id="subscriber-view" class="hidden my-8">
-            <p class="mb-4">Seu acesso de 30 dias está ativo! Gere quantos jogos quiser abaixo.</p>
+            <p class="mb-4">O seu acesso de 30 dias está ativo! Gere quantos jogos quiser abaixo.</p>
             <button id="generate-new-games-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg mb-6 shadow-lg">
                 🍀 GERAR NOVOS JOGOS
             </button>
         </div>
         
-        <div id="games-container" class="my-8 min-h-[100px]"> <p class="text-gray-500 font-bold">Seus jogos aparecerão aqui.</p> </div>
-        <div id="final-message" class="hidden mb-6"> <p class="text-2xl text-purple-500 font-bold">Pagamento aprovado!<br>Boa sorte! 🍀</p> </div>
+        <div id="games-container" class="my-8 min-h-[100px]"> <p class="text-gray-500 font-bold">Os seus jogos aparecerão aqui.</p> </div>
+        
+        <div id="final-message" class="hidden mb-6"> 
+             <p class="text-2xl text-purple-500 font-bold">Pagamento aprovado!<br>Boa sorte! 🍀</p>
+        </div>
+        
         <div id="status-message" class="mt-4 text-sm font-semibold"></div>
         <p class="text-xs text-gray-400 mt-6"> Pagamento processado com segurança pelo Mercado Pago. </p>
 
@@ -79,10 +98,10 @@
 
     <script>
         // --- CONFIGURAÇÃO ---
-        const VERCEL_BACKEND_URL = 'https://www.numerosdeouro.com.br/'; // <-- IMPORTANTE: COLOQUE A URL DO SEU BACKEND AQUI!
+        const VERCEL_BACKEND_URL = 'https://gerador-loto-back-git-main-adriano-medeiros-projects.vercel.app'; // <-- IMPORTANTE: Coloque a sua URL real aqui!
         const plans = {
             single: { type: 'single', amount: 3.00, title: 'Jogada Única', description: '5 Jogos Inteligentes da Lotofácil' },
-            monthly: { type: 'monthly', amount: 29.90, title: 'Acesso por 30 Dias', description: 'Acesso ilimitado por 30 dias' }
+            monthly: { type: 'monthly', amount: 29.90, title: 'Acesso por 30 Dias ✨', description: 'Acesso ilimitado por 30 dias' }
         };
         let selectedPlan = {};
         let userEmail = localStorage.getItem('lotofacilUserEmail') || '';
@@ -95,12 +114,13 @@
         const gamesContainer = getEl('games-container');
         const statusMessage = getEl('status-message');
 
-        // --- FUNÇÕES DE UI ---
+        // --- CONTROLO DE EXIBIÇÃO ---
         function showView(viewId) {
             allViews.forEach(id => getEl(id).classList.add('hidden'));
             if (viewId) getEl(viewId).classList.remove('hidden');
         }
 
+        // --- EXIBIÇÃO DOS JOGOS ---
         function displayGames(games) {
             gamesContainer.innerHTML = '';
             games.forEach((game, gameIndex) => {
@@ -116,26 +136,27 @@
                 gamesContainer.appendChild(gameRow);
             });
         }
-        
+
         // --- LÓGICA DE PAGAMENTO ---
-        function onPaymentSuccess(data) {
+        async function onPaymentSuccess(data) {
             clearInterval(paymentCheckInterval);
             statusMessage.textContent = '';
-            
             localStorage.setItem('lotofacilUserEmail', data.email);
             userEmail = data.email;
 
             if (data.subscription) {
-                checkAccess(); // Após pagar, verifica o acesso para mostrar a tela de assinante
+                // Se for uma subscrição (acesso de 30 dias), verifica o acesso para atualizar a UI
+                await checkUserAccess();
             } else if (data.games) {
+                // Se for uma jogada única, mostra a mensagem final e os jogos
                 showView(null);
                 getEl('final-message').classList.remove('hidden');
                 displayGames(data.games);
             }
         }
-
+        
         function startPaymentStatusCheck(paymentId) {
-            statusMessage.textContent = 'Aguardando confirmação do pagamento...';
+            statusMessage.textContent = 'A aguardar a confirmação do pagamento...';
             const checkStatus = async () => {
                 try {
                     const response = await fetch(`${VERCEL_BACKEND_URL}/api/generate-games`, {
@@ -144,46 +165,57 @@
                         body: JSON.stringify({ paymentId })
                     });
                     if (response.status === 200) {
-                        onPaymentSuccess(await response.json());
-                    } else if (response.status !== 402) {
+                        const data = await response.json();
+                        onPaymentSuccess(data);
+                    } else if (response.status !== 402) { // 402 significa "Pagamento Necessário" (ainda pendente)
                         clearInterval(paymentCheckInterval);
-                        statusMessage.textContent = `Erro: ${(await response.json().catch(()=>({error: "Erro desconhecido."}))).error}`;
+                        const errorData = await response.json().catch(() => ({ error: "Erro desconhecido." }));
+                        statusMessage.textContent = `Erro: ${errorData.error || 'Falha ao verificar.'}`;
                     }
-                } catch (error) { console.error('Erro de conexão ao verificar pagamento.', error); }
+                } catch (error) { 
+                    console.error('Erro de conexão ao verificar pagamento.', error);
+                    // Opcional: pode-se adicionar uma mensagem para o utilizador aqui, se desejado
+                }
             };
             setTimeout(() => {
-                checkStatus();
-                paymentCheckInterval = setInterval(checkStatus, 6000);
-            }, 3000);
+                checkStatus(); // Verifica imediatamente após um curto atraso
+                paymentCheckInterval = setInterval(checkStatus, 7000); // E depois a cada 7 segundos
+            }, 5000);
         }
 
         async function createPixPayment() {
             showView('pix-view');
             const pixContainer = getEl('pix-view');
-            pixContainer.innerHTML = `<p>Gerando PIX...</p>`;
+            pixContainer.innerHTML = `<p>A gerar o PIX...</p>`;
             try {
                 const response = await fetch(`${VERCEL_BACKEND_URL}/api/create-pix-payment`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         email: userEmail,
+                        amount: selectedPlan.amount,
                         description: selectedPlan.description,
                         planType: selectedPlan.type
                     })
                 });
-                if (!response.ok) throw new Error((await response.json().catch(()=>({error:"Erro de comunicação."}))).error);
-                
+                if (!response.ok) {
+                    const err = await response.json().catch(()=>({error: "Erro de comunicação."}));
+                    throw new Error(err.error);
+                }
                 const data = await response.json();
                 pixContainer.innerHTML = `
                     <h3 class="font-semibold text-lg mb-4">Finalizar Pagamento: ${selectedPlan.title}</h3>
-                    <p class="font-semibold">Escaneie o QR Code ou use o Copia e Cola:</p>
+                    <p class="font-semibold">Leia o QR Code ou use o Copia e Cola:</p>
                     <img src="data:image/png;base64,${data.qrCodeBase64}" alt="QR Code PIX" class="mx-auto border-4 rounded-lg my-4">
                     <div class="flex">
-                        <input type="text" readonly value="${data.qrCode}" class="w-full px-3 py-2 border rounded-l-md dark:bg-gray-700 dark:border-gray-600">
+                        <input type="text" readonly value="${data.qrCode}" id="pix-code-input" class="w-full px-3 py-2 border rounded-l-md dark:bg-gray-700 dark:border-gray-600">
                         <button id="copy-pix-btn" class="bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold p-3 rounded-r-md">Copiar</button>
                     </div>`;
                 getEl('copy-pix-btn').addEventListener('click', e => {
-                    navigator.clipboard.writeText(data.qrCode);
+                    const input = getEl('pix-code-input');
+                    input.select();
+                    // Usar document.execCommand como fallback para compatibilidade máxima
+                    document.execCommand('copy');
                     e.target.textContent = 'Copiado!';
                     setTimeout(() => { e.target.textContent = 'Copiar'; }, 2000);
                 });
@@ -195,73 +227,113 @@
         }
 
         // --- VERIFICAÇÃO DE ACESSO (SEGURO) ---
-        async function checkAccess() {
+        async function checkUserAccess() {
+            // Se não houver e-mail guardado, mostra a seleção de planos
             if (!userEmail) {
                 showView('plan-selection-view');
                 return;
             }
+
             try {
                 const response = await fetch(`${VERCEL_BACKEND_URL}/api/check-access`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email: userEmail })
                 });
+
+                if (!response.ok) throw new Error('Falha ao verificar acesso.');
+                
                 const data = await response.json();
+
                 if (data.hasAccess) {
                     getEl('days-left').textContent = data.daysLeft;
                     getEl('subscription-info').classList.remove('hidden');
                     showView('subscriber-view');
-                    gamesContainer.innerHTML = '<p class="text-gray-500 font-bold">Clique no botão acima para gerar seus jogos.</p>';
+                    // Gera os jogos automaticamente ao carregar a página de assinante
+                    await getEl('generate-new-games-btn').click();
                 } else {
+                    // Se não tiver acesso, esconde a info de subscrição e mostra os planos
                     getEl('subscription-info').classList.add('hidden');
                     showView('plan-selection-view');
                 }
             } catch (error) {
                 console.error("Erro ao verificar acesso:", error);
-                statusMessage.textContent = 'Não foi possível verificar seu acesso. Tente novamente.';
-                showView('plan-selection-view');
+                statusMessage.textContent = 'Não foi possível verificar o seu acesso. Tente novamente mais tarde.';
+                showView('plan-selection-view'); // Volta para a seleção de planos em caso de erro
             }
         }
-        
-        // --- INICIALIZAÇÃO E EVENTOS ---
+
+        // --- INICIALIZAÇÃO DA PÁGINA ---
         document.addEventListener('DOMContentLoaded', async () => {
             showView('loading-view');
+            
+            // Validação da URL do backend para ajudar na depuração
             if (!VERCEL_BACKEND_URL || VERCEL_BACKEND_URL.includes('SEU-BACKEND')) {
-                 statusMessage.textContent = 'Erro de configuração: URL do backend não definida.';
-                 return showView(null);
+                 statusMessage.innerHTML = '<b>ERRO DE CONFIGURAÇÃO:</b><br>A URL do backend não foi definida no ficheiro HTML.';
+                 console.error("ERRO: A constante VERCEL_BACKEND_URL não foi definida.");
+                 showView(null);
+                 return;
             }
+
             try {
-                const res = await fetch(`${VERCEL_BACKEND_URL}/api/get-config`);
-                if (!res.ok) throw new Error("Falha ao carregar configurações.");
-                const { publicKey } = await res.json();
+                // Pega a chave pública do backend para inicializar o Mercado Pago
+                const configResponse = await fetch(`${VERCEL_BACKEND_URL}/api/get-config`);
+                if (!configResponse.ok) throw new Error("Falha ao carregar as configurações do servidor.");
+                const { publicKey } = await configResponse.json();
+                if (!publicKey) throw new Error("A chave pública do Mercado Pago não foi recebida.");
                 mp = new MercadoPago(publicKey);
-                await checkAccess();
+
+                // A verificação de acesso agora é a função principal que determina o que o utilizador vê
+                await checkUserAccess();
+
             } catch(e) {
-                statusMessage.textContent = 'Erro ao carregar o sistema. Recarregue a página.';
+                console.error("Falha ao inicializar.", e);
+                statusMessage.textContent = 'Erro ao carregar o sistema. Verifique a URL do backend e recarregue a página.';
                 showView(null);
             }
 
-            getEl('single-play-btn').onclick = () => { selectedPlan = plans.single; getEl('user-email').value = userEmail; showView('email-view'); };
-            getEl('monthly-play-btn').onclick = () => { selectedPlan = plans.monthly; getEl('user-email').value = userEmail; showView('email-view'); };
-            getEl('email-form').onsubmit = (e) => { e.preventDefault(); userEmail = getEl('user-email').value; localStorage.setItem('lotofacilUserEmail', userEmail); createPixPayment(); };
+            // --- EVENTOS DE CLIQUE ---
+            getEl('single-play-btn').addEventListener('click', () => {
+                selectedPlan = plans.single;
+                getEl('user-email').value = userEmail;
+                showView('email-view');
+            });
+
+            getEl('monthly-play-btn').addEventListener('click', () => {
+                selectedPlan = plans.monthly;
+                getEl('user-email').value = userEmail;
+                showView('email-view');
+            });
             
+            getEl('email-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                userEmail = getEl('user-email').value;
+                localStorage.setItem('lotofacilUserEmail', userEmail); // Guarda o e-mail
+                createPixPayment();
+            });
+
             getEl('generate-new-games-btn').addEventListener('click', async () => {
                 const btn = getEl('generate-new-games-btn');
                 btn.disabled = true;
-                btn.textContent = 'GERANDO...';
-                statusMessage.textContent = '';
+                btn.textContent = 'A GERAR...';
+                statusMessage.textContent = ''; // Limpa mensagens de erro
                 try {
-                    const res = await fetch(`${VERCEL_BACKEND_URL}/api/generate-subscriber-games`, {
+                    const response = await fetch(`${VERCEL_BACKEND_URL}/api/generate-subscriber-games`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ email: userEmail })
                     });
-                    if (!res.ok) throw new Error((await res.json()).error);
-                    const data = await res.json();
+                    if (!response.ok) {
+                        const err = await response.json();
+                        throw new Error(err.error || 'Falha ao gerar jogos.');
+                    }
+                    const data = await response.json();
                     displayGames(data.games);
                 } catch (error) {
-                    statusMessage.textContent = `Erro: ${error.message}. Seu acesso pode ter expirado.`;
-                    setTimeout(checkAccess, 2000); // Re-verifica o acesso se houver erro
+                    console.error('Erro ao obter novos jogos:', error);
+                    statusMessage.textContent = error.message;
+                    // Se a geração falhar (ex: token expirado), verifica o acesso novamente
+                    setTimeout(checkUserAccess, 3000); 
                 } finally {
                     btn.disabled = false;
                     btn.textContent = '🍀 GERAR NOVOS JOGOS';
@@ -271,4 +343,3 @@
     </script>
 </body>
 </html>
-
