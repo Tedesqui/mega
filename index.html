@@ -214,8 +214,8 @@
             }
         }
 
-        async function checkSubscription() {
-            showView('loading-view');
+        async function checkSubscription(retries = 3) {
+            if (retries === 3) showView('loading-view'); // Mostra o loading apenas na primeira tentativa
             if (!userEmail) {
                 showView('plan-selection-view');
                 return;
@@ -227,6 +227,9 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email: userEmail })
                 });
+                
+                if (!response.ok) throw new Error(`Status do servidor: ${response.status}`);
+
                 const data = await response.json();
 
                 if (data.isSubscriber) {
@@ -238,12 +241,19 @@
                     showView('subscriber-view');
                     generateSubscriberGames();
                 } else {
-                    // CORREÇÃO: Não apaga mais o e-mail do usuário em caso de falha na verificação.
-                    // Apenas mostra a tela de seleção de planos.
                     showView('plan-selection-view');
                 }
             } catch (error) {
-                statusMessage.textContent = 'Não foi possível verificar a assinatura. Tente recarregar a página.';
+                console.error(`Falha na verificação da assinatura (tentativa restante: ${retries - 1})`, error);
+                if (retries > 1) {
+                    // Tenta novamente após 2 segundos
+                    setTimeout(() => checkSubscription(retries - 1), 2000);
+                } else {
+                    // Todas as tentativas falharam
+                    statusMessage.textContent = 'Não foi possível verificar a assinatura. Verifique sua conexão e recarregue a página.';
+                    // Mostra a tela de planos para não deixar o usuário travado no loading
+                    showView('plan-selection-view');
+                }
             }
         }
         
