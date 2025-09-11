@@ -22,9 +22,14 @@
             border: 2px solid transparent;
             transition: all 0.3s ease;
         }
-        .plan-card:hover {
+        .plan-card:hover:not(.disabled) {
             transform: translateY(-5px);
             border-color: #8B5CF6; /* purple-500 */
+        }
+        .plan-card.disabled {
+            cursor: not-allowed;
+            background-color: #4B5563 !important; /* gray-600 */
+            opacity: 0.6;
         }
     </style>
 </head>
@@ -46,7 +51,7 @@
         </p>
         
         <div id="loading-view" class="my-8">
-            <p>Verificando sua assinatura...</p>
+            <p>Carregando sistema de pagamento...</p>
         </div>
 
         <div id="plan-selection-view" class="hidden my-8">
@@ -57,10 +62,10 @@
                      <p class="text-3xl font-bold my-2">R$ 3,00</p>
                      <p class="text-sm text-white/90 dark:text-white/90 font-bold">Receba 5 jogos gerados por nossa inteligência artificial.</p>
                  </div>
-                 <div id="monthly-play-btn" class="plan-card cursor-pointer bg-green-500 dark:bg-green-700 text-white p-6 rounded-lg shadow-md">
+                 <div id="monthly-play-btn" class="plan-card disabled p-6 rounded-lg shadow-md" title="Funcionalidade de assinatura em desenvolvimento">
                      <h3 class="text-lg font-bold text-white">Acesso Mensal ✨</h3>
                      <p class="text-3xl font-bold my-2">R$ 29,90</p>
-                     <p class="text-sm text-white/90 dark:text-white/90 font-bold">Gere apostas ILIMITADAS por 30 dias. O melhor custo-benefício!</p>
+                     <p class="text-sm text-white/90 dark:text-white/90 font-bold">Temporariamente indisponível.</p>
                  </div>
              </div>
         </div>
@@ -74,8 +79,7 @@
         </div>
         
         <div id="pix-view" class="hidden my-8">
-            <!-- Conteúdo do PIX será injetado aqui -->
-        </div>
+            </div>
 
         <div id="subscriber-view" class="hidden my-8">
             <p class="mb-4">Seu acesso está ativo! Gere quantos jogos quiser.</p>
@@ -104,8 +108,11 @@
 
     <script>
         // --- CONFIGURAÇÃO ---
-        const VERCEL_BACKEND_URL = ''; // Deixe em branco para usar o mesmo domínio (ex: /api/endpoint)
+        // A URL da API deve ser vazia para funcionar na Vercel
+        const VERCEL_BACKEND_URL = ''; 
+        
         // ATENÇÃO: Valores de pagamento alterados para R$ 1,00 para fins de teste.
+        // Lembre-se de alterar aqui e no backend (/api/generate-games.js) quando for para produção.
         const plans = {
             single: { type: 'single', amount: 1.00, title: 'Jogada Única (Teste)', description: '5 Jogos Inteligentes da Lotofácil' },
             monthly: { type: 'monthly', amount: 1.00, title: 'Acesso Mensal (Teste)', description: 'Acesso ilimitado por 30 dias' }
@@ -123,7 +130,6 @@
         const gamesContainer = getEl('games-container');
         const statusMessage = getEl('status-message');
         const subscriptionInfo = getEl('subscription-info');
-        const daysLeft = getEl('days-left');
 
         // --- FUNÇÕES DE CONTROLE DE EXIBIÇÃO ---
         function showView(viewId) {
@@ -133,7 +139,7 @@
             }
         }
 
-        // --- LÓGICA PRINCIPAL ---
+        // --- FUNÇÃO PARA EXIBIR OS JOGOS NA TELA ---
         function displayGames(games) {
             gamesContainer.innerHTML = '';
             games.forEach((game, gameIndex) => {
@@ -150,26 +156,22 @@
             });
         }
 
+        // --- FUNÇÃO CHAMADA QUANDO O PAGAMENTO É APROVADO ---
         function onPaymentSuccess(data) {
             clearInterval(paymentCheckInterval);
             statusMessage.textContent = '';
 
+            // A lógica de assinatura será implementada no futuro.
             if (data.subscription) {
-                localStorage.setItem('lotofacilUserEmail', data.email);
-                userEmail = data.email;
-                
-                daysLeft.textContent = 30; 
-                subtitle.textContent = 'Pagamento aprovado! Você é um assinante.';
-                subscriptionInfo.classList.remove('hidden');
-                showView('subscriber-view');
-                generateSubscriberGames();
+                 // Futuramente, salvar dados do assinante e mostrar a tela de assinante
+                 console.log("Fluxo de assinatura ativado.");
 
             } else {
                 // Lógica para jogada única
                 if (data && Array.isArray(data.games) && data.games.length > 0) {
-                    showView(null); 
-                    finalMessage.classList.remove('hidden');
-                    displayGames(data.games);
+                    showView(null); // Esconde todas as views principais
+                    finalMessage.classList.remove('hidden'); // Mostra a mensagem de sucesso
+                    displayGames(data.games); // Mostra os jogos
                 } else {
                     console.error("Payload de sucesso para jogada única inválido:", data);
                     statusMessage.textContent = 'Pagamento aprovado, mas houve um erro ao gerar seus jogos. Por favor, contate o suporte.';
@@ -178,6 +180,7 @@
             }
         }
 
+        // --- FUNÇÃO QUE VERIFICA O STATUS DO PAGAMENTO PERIODICAMENTE ---
         function startPaymentStatusCheck(paymentId) {
             statusMessage.textContent = 'Aguardando confirmação do pagamento...';
             
@@ -189,93 +192,31 @@
                         body: JSON.stringify({ paymentId })
                     });
 
-                    if (response.status === 200) {
+                    if (response.status === 200) { // SUCESSO! Pagamento Aprovado
                         const data = await response.json();
                         onPaymentSuccess(data);
-                    } else if (response.status === 202 || response.status === 402) {
-                        console.log(`Status do pagamento: Pendente (código ${response.status}). Verificando novamente...`);
-                    } else {
-                        // Erro definitivo (400, 404, 500, etc.)
+                    } else if (response.status === 402) { // PENDENTE. Pagamento ainda não confirmado
+                        console.log(`Status do pagamento: Pendente. Verificando novamente...`);
+                    } else { // ERRO.
                         clearInterval(paymentCheckInterval); 
                         const errorData = await response.json().catch(() => ({ error: "Erro desconhecido no servidor." }));
                         statusMessage.textContent = `Erro ao confirmar pagamento: ${errorData.error}`;
-                        console.error(`Erro definitivo na verificação (código: ${response.status}):`, errorData);
+                        console.error(`Erro na verificação (código: ${response.status}):`, errorData);
                     }
                 } catch (error) {
                     console.error('Erro de conexão ao verificar o pagamento.', error);
+                    // Opcional: poderia parar de verificar após X tentativas falhas de conexão
                 }
             };
 
+            // Começa a verificar após 3 segundos, e depois a cada 6 segundos.
             setTimeout(() => {
                 checkStatus(); 
                 paymentCheckInterval = setInterval(checkStatus, 6000);
             }, 3000);
         }
 
-        async function generateSubscriberGames() {
-            try {
-                const btn = getEl('generate-new-games-btn');
-                btn.disabled = true;
-                btn.textContent = 'Gerando...';
-                const response = await fetch(`${VERCEL_BACKEND_URL}/api/generate-subscriber-games`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: userEmail })
-                });
-                if (!response.ok) throw new Error('Falha ao gerar jogos.');
-                const data = await response.json();
-                displayGames(data.games);
-            } catch (error) {
-                statusMessage.textContent = error.message;
-            } finally {
-                const btn = getEl('generate-new-games-btn');
-                btn.disabled = false;
-                btn.textContent = '🍀 GERAR NOVOS JOGOS';
-            }
-        }
-
-        async function checkSubscription(retries = 3) {
-            if (retries === 3) showView('loading-view');
-            if (!userEmail) {
-                showView('plan-selection-view');
-                return;
-            }
-
-            try {
-                const response = await fetch(`${VERCEL_BACKEND_URL}/api/check-subscription`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: userEmail })
-                });
-                
-                if (!response.ok) throw new Error(`Status do servidor: ${response.status}`);
-
-                const data = await response.json();
-
-                if (data.isSubscriber) {
-                    const diffTime = new Date(data.expiresAt) - new Date();
-                    const diffDays = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
-                    daysLeft.textContent = diffDays;
-                    subtitle.textContent = 'Você é um assinante! Gere jogos à vontade.';
-                    subscriptionInfo.classList.remove('hidden');
-                    showView('subscriber-view');
-                    generateSubscriberGames();
-                } else {
-                    showView('plan-selection-view');
-                }
-            } catch (error) {
-                console.error(`Falha na verificação da assinatura (tentativa restante: ${retries - 1})`, error);
-                if (retries > 1) {
-                    setTimeout(() => checkSubscription(retries - 1), 2000);
-                } else {
-                    // CORREÇÃO: Não mostra mais uma mensagem de erro para o usuário.
-                    // Apenas loga o erro no console e mostra a tela de planos como se fosse um novo usuário.
-                    console.error("Todas as tentativas de verificação de assinatura falharam. Exibindo seleção de planos.");
-                    showView('plan-selection-view');
-                }
-            }
-        }
-        
+        // --- FUNÇÃO QUE CRIA O PAGAMENTO PIX ---
         async function createPixPayment() {
             showView('pix-view');
             const pixContainer = getEl('pix-view');
@@ -306,6 +247,7 @@
                     throw new Error('A resposta do servidor está incompleta. Tente novamente.');
                 }
                 
+                // Insere o QR Code e o botão de copiar na tela
                 pixContainer.innerHTML = `
                     <h3 class="font-semibold text-lg mb-4">Finalizar Pagamento: ${selectedPlan.title}</h3>
                     <p class="font-semibold">Escaneie o QR Code ou use o Copia e Cola:</p>
@@ -321,7 +263,9 @@
                     setTimeout(() => { e.target.textContent = 'Copiar'; }, 2000);
                 });
 
+                // Inicia a verificação do status do pagamento
                 startPaymentStatusCheck(data.paymentId);
+
             } catch (error) {
                 pixContainer.innerHTML = `<p class="text-red-500">${error.message}</p>
                 <button type="button" id="back-to-email-btn" class="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg mt-4">↩️ Tentar Novamente</button>`;
@@ -329,40 +273,50 @@
             }
         }
 
-        // --- INICIALIZAÇÃO E EVENT LISTENERS ---
+        // --- INICIALIZAÇÃO E EVENTOS ---
         document.addEventListener('DOMContentLoaded', async () => {
+            showView('loading-view'); // Mostra a tela de carregamento
+
             try {
+                // Busca a Chave Pública do backend para inicializar o MP
                 const configResponse = await fetch(`${VERCEL_BACKEND_URL}/api/get-config`); 
+                if (!configResponse.ok) throw new Error("Não foi possível carregar as configurações de pagamento.");
+                
                 const { publicKey } = await configResponse.json();
-                if (!publicKey) throw new Error("Chave pública não recebida.");
+                if (!publicKey) throw new Error("Chave pública não recebida do servidor.");
+                
                 mp = new MercadoPago(publicKey);
+
+                // Em vez de verificar a assinatura, vamos direto para a seleção de planos.
+                showView('plan-selection-view');
+
             } catch(e) {
-                console.error("Falha ao inicializar o SDK do Mercado Pago.", e);
-                statusMessage.textContent = 'Erro ao carregar o sistema de pagamento. Recarregue a página.';
+                console.error("Falha ao inicializar o sistema de pagamento.", e);
+                statusMessage.textContent = 'Erro ao carregar o sistema de pagamento. Por favor, recarregue a página.';
+                showView(null); // Esconde todas as views em caso de erro fatal
                 return;
             }
 
+            // Evento para o botão de Jogada Única
             getEl('single-play-btn').addEventListener('click', () => {
                 selectedPlan = plans.single;
                 getEl('user-email').value = userEmail;
                 showView('email-view');
             });
-            getEl('monthly-play-btn').addEventListener('click', () => {
-                selectedPlan = plans.monthly;
-                getEl('user-email').value = userEmail;
-                showView('email-view');
-            });
 
+            // O botão de Acesso Mensal está desativado, então não precisa de evento por enquanto.
+            // getEl('monthly-play-btn').addEventListener('click', () => { ... });
+
+            // Evento para o formulário de e-mail
             getEl('email-form').addEventListener('submit', (e) => {
                 e.preventDefault();
                 userEmail = getEl('user-email').value;
                 localStorage.setItem('lotofacilUserEmail', userEmail);
                 createPixPayment();
             });
-
-            getEl('generate-new-games-btn').addEventListener('click', generateSubscriberGames);
             
-            checkSubscription();
+            // A lógica de gerar jogos para assinantes não é necessária agora.
+            // getEl('generate-new-games-btn').addEventListener('click', generateSubscriberGames);
         });
     </script>
 </body>
