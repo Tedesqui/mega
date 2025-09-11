@@ -1,15 +1,17 @@
 {
   "name": "gerador-backend",
   "version": "1.0.0",
-  "description": "Backend para o Gerador Mega-Sena",
+  "description": "Backend para o Gerador Lotofácil",
   "main": "index.js",
   "scripts": {
+    "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@vercel/kv": "^1.0.1",
     "mercadopago": "^2.0.10"
   }
 }
