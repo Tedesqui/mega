@@ -19,7 +19,7 @@ export default async function handler(request, response) {
         return response.status(400).json({ error: 'Campos obrigatórios ausentes: email, amount, description, planType.' });
     }
 
-    if (parseFloat(amount) !== 1.00 && parseFloat(amount) !== 1.00) {
+    if (parseFloat(amount) !== 3.00 && parseFloat(amount) !== 29.90) {
         return response.status(400).json({ error: 'Valor de transação inválido.' });
     }
 
