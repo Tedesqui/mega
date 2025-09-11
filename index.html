@@ -18,19 +18,8 @@
         .game-row { margin-bottom: 1rem; padding: 0.5rem; background-color: rgba(255, 255, 255, 0.05); border-radius: 8px; }
         @keyframes pop-in { to { opacity: 1; transform: scale(1); } }
         .hidden { display: none; }
-        .plan-card {
-            border: 2px solid transparent;
-            transition: all 0.3s ease;
-        }
-        .plan-card:hover:not(.disabled) {
-            transform: translateY(-5px);
-            border-color: #8B5CF6; /* purple-500 */
-        }
-        .plan-card.disabled {
-            cursor: not-allowed;
-            background-color: #4B5563 !important; /* gray-600 */
-            opacity: 0.6;
-        }
+        .plan-card { border: 2px solid transparent; transition: all 0.3s ease; }
+        .plan-card:hover { transform: translateY(-5px); border-color: #8B5CF6; }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 flex justify-center md:items-center min-h-screen md:p-4">
@@ -50,9 +39,7 @@
             <span class="block font-bold">Aumente suas chances de GANHAR!</span>
         </p>
         
-        <div id="loading-view" class="my-8">
-            <p>Carregando sistema de pagamento...</p>
-        </div>
+        <div id="loading-view" class="my-8"> <p>Verificando seu acesso...</p> </div>
 
         <div id="plan-selection-view" class="hidden my-8">
              <h2 class="text-xl font-bold mb-6">Escolha seu plano:</h2>
@@ -60,12 +47,12 @@
                  <div id="single-play-btn" class="plan-card cursor-pointer bg-blue-500 dark:bg-blue-700 text-white p-6 rounded-lg shadow-md">
                      <h3 class="text-lg font-bold text-white">Jogada Única</h3>
                      <p class="text-3xl font-bold my-2">R$ 3,00</p>
-                     <p class="text-sm text-white/90 dark:text-white/90 font-bold">Receba 5 jogos gerados por nossa inteligência artificial.</p>
+                     <p class="text-sm text-white/90 font-bold">Receba 5 jogos gerados por nossa IA.</p>
                  </div>
-                 <div id="monthly-play-btn" class="plan-card disabled p-6 rounded-lg shadow-md" title="Funcionalidade de assinatura em desenvolvimento">
-                     <h3 class="text-lg font-bold text-white">Acesso Mensal ✨</h3>
+                 <div id="monthly-play-btn" class="plan-card cursor-pointer bg-green-500 dark:bg-green-700 text-white p-6 rounded-lg shadow-md">
+                     <h3 class="text-lg font-bold text-white">Acesso por 30 Dias ✨</h3>
                      <p class="text-3xl font-bold my-2">R$ 29,90</p>
-                     <p class="text-sm text-white/90 dark:text-white/90 font-bold">Temporariamente indisponível.</p>
+                     <p class="text-sm text-white/90 font-bold">Gere apostas ILIMITADAS por 30 dias.</p>
                  </div>
              </div>
         </div>
@@ -73,73 +60,76 @@
         <div id="email-view" class="hidden my-8">
             <h3 id="email-title" class="font-semibold text-lg mb-4">Informe seu e-mail para continuar</h3>
             <form id="email-form" class="space-y-4">
-                <input type="email" id="user-email" placeholder="seuemail@exemplo.com" required class="w-full px-3 py-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600">
+                <input type="email" id="user-email" placeholder="seuemail@exemplo.com" required class="w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600">
                 <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg">Prosseguir para Pagamento PIX</button>
             </form>
         </div>
         
-        <div id="pix-view" class="hidden my-8">
-            </div>
+        <div id="pix-view" class="hidden my-8"> </div>
 
         <div id="subscriber-view" class="hidden my-8">
-            <p class="mb-4">Seu acesso está ativo! Gere quantos jogos quiser.</p>
+            <p class="mb-4">Seu acesso de 30 dias está ativo! Gere quantos jogos quiser abaixo.</p>
             <button id="generate-new-games-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg mb-6 shadow-lg">
                 🍀 GERAR NOVOS JOGOS
             </button>
         </div>
         
-        <div id="games-container" class="my-8 min-h-[100px]">
-             <p class="text-gray-500 font-bold">Seus jogos aparecerão aqui.</p>
-        </div>
-
-        <div id="final-message" class="hidden mb-6">
-             <p class="text-2xl text-purple-500 font-bold">Pagamento aprovado! Boa sorte! 🍀</p>
-        </div>
-        
+        <div id="games-container" class="my-8 min-h-[100px]"> <p class="text-gray-500 font-bold">Seus jogos aparecerão aqui.</p> </div>
+        <div id="final-message" class="hidden mb-6"> <p class="text-2xl text-purple-500 font-bold">Pagamento aprovado! Boa sorte! 🍀</p> </div>
         <div id="status-message" class="mt-4 text-sm font-semibold"></div>
-        <p class="text-xs text-gray-400 dark:text-gray-500 mt-6">
-            Pagamento processado com segurança pelo Mercado Pago.
-        </p>
+        <p class="text-xs text-gray-400 mt-6"> Pagamento processado com segurança pelo Mercado Pago. </p>
 
-        <footer class="text-xs text-gray-500 dark:text-gray-400 mt-8 border-t border-gray-200 dark:border-gray-700 pt-4">
+        <footer class="text-xs text-gray-500 mt-8 border-t border-gray-200 dark:border-gray-700 pt-4">
             <p><b class="font-bold">ATENÇÃO:</b> Este site não gera apostas diretamente no sistema da Caixa. Ele apenas gera os números para você apostar.</p>
         </footer>
     </div>
 
     <script>
         // --- CONFIGURAÇÃO ---
-        // A URL da API deve ser vazia para funcionar na Vercel
-        const VERCEL_BACKEND_URL = ''; 
-        
-        // ATENÇÃO: Valores de pagamento alterados para R$ 1,00 para fins de teste.
-        // Lembre-se de alterar aqui e no backend (/api/generate-games.js) quando for para produção.
+        const VERCEL_BACKEND_URL = '';
         const plans = {
             single: { type: 'single', amount: 1.00, title: 'Jogada Única (Teste)', description: '5 Jogos Inteligentes da Lotofácil' },
-            monthly: { type: 'monthly', amount: 1.00, title: 'Acesso Mensal (Teste)', description: 'Acesso ilimitado por 30 dias' }
+            monthly: { type: 'monthly', amount: 1.00, title: 'Acesso 30 Dias (Teste)', description: 'Acesso ilimitado por 30 dias' }
         };
         let selectedPlan = {};
         let userEmail = localStorage.getItem('lotofacilUserEmail') || '';
         let paymentCheckInterval;
-        let mp; // Instância do Mercado Pago
+        let mp;
 
         // --- ELEMENTOS DA UI ---
         const allViews = ['loading-view', 'plan-selection-view', 'email-view', 'pix-view', 'subscriber-view'];
         const getEl = (id) => document.getElementById(id);
-        const subtitle = getEl('subtitle');
-        const finalMessage = getEl('final-message');
         const gamesContainer = getEl('games-container');
         const statusMessage = getEl('status-message');
-        const subscriptionInfo = getEl('subscription-info');
 
-        // --- FUNÇÕES DE CONTROLE DE EXIBIÇÃO ---
-        function showView(viewId) {
-            allViews.forEach(id => getEl(id).classList.add('hidden'));
-            if (viewId) {
-                getEl(viewId).classList.remove('hidden');
-            }
+        // --- LÓGICA DE GERAÇÃO DE JOGOS (agora no frontend) ---
+        function generateLotofacilGames() {
+             const mostFrequentNumbers = [20, 10, 25, 11, 24, 13, 14, 4, 3, 2, 12, 1, 19, 5, 22, 18, 9, 15];
+             const games = Array.from({ length: 5 }, () => {
+                const pool = Array.from({length: 25}, (_, i) => i + 1);
+                mostFrequentNumbers.forEach(num => { for (let i = 0; i < 4; i++) pool.push(num); });
+                const selectedNumbers = new Set();
+                while (selectedNumbers.size < 15) {
+                    selectedNumbers.add(pool[Math.floor(Math.random() * pool.length)]);
+                }
+                return Array.from(selectedNumbers).sort((a, b) => a - b);
+             });
+             displayGames(games);
         }
 
-        // --- FUNÇÃO PARA EXIBIR OS JOGOS NA TELA ---
+        // --- CONTROLE DE EXIBIÇÃO ---
+        function showView(viewId) {
+            allViews.forEach(id => getEl(id).classList.add('hidden'));
+            if (viewId) getEl(id).classList.remove('hidden');
+        }
+
+        function displayGames(games) { /* ... (código sem alteração) ... */ }
+        function onPaymentSuccess(data) { /* ... (código sem alteração) ... */ }
+        function startPaymentStatusCheck(paymentId) { /* ... (código sem alteração) ... */ }
+        async function createPixPayment() { /* ... (código sem alteração) ... */ }
+        
+        // --- REFAZENDO AS FUNÇÕES COM A NOVA LÓGICA ---
+        
         function displayGames(games) {
             gamesContainer.innerHTML = '';
             games.forEach((game, gameIndex) => {
@@ -156,34 +146,33 @@
             });
         }
 
-        // --- FUNÇÃO CHAMADA QUANDO O PAGAMENTO É APROVADO ---
         function onPaymentSuccess(data) {
             clearInterval(paymentCheckInterval);
             statusMessage.textContent = '';
-
-            // A lógica de assinatura será implementada no futuro.
+            
             if (data.subscription) {
-                 // Futuramente, salvar dados do assinante e mostrar a tela de assinante
-                 console.log("Fluxo de assinatura ativado.");
+                // Pagamento do PASSE DE 30 DIAS foi aprovado!
+                const expiryDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+                const accessPass = { expiresAt: expiryDate.toISOString() };
+                localStorage.setItem('lotofacilAccessPass', JSON.stringify(accessPass));
+                
+                // Salva o e-mail também, para preencher o campo da próxima vez
+                localStorage.setItem('lotofacilUserEmail', data.email);
+                userEmail = data.email;
+                
+                // Atualiza a UI para a visão de assinante
+                checkSubscription();
 
-            } else {
-                // Lógica para jogada única
-                if (data && Array.isArray(data.games) && data.games.length > 0) {
-                    showView(null); // Esconde todas as views principais
-                    finalMessage.classList.remove('hidden'); // Mostra a mensagem de sucesso
-                    displayGames(data.games); // Mostra os jogos
-                } else {
-                    console.error("Payload de sucesso para jogada única inválido:", data);
-                    statusMessage.textContent = 'Pagamento aprovado, mas houve um erro ao gerar seus jogos. Por favor, contate o suporte.';
-                    showView(null);
-                }
+            } else if (data.games) {
+                // Pagamento de JOGADA ÚNICA foi aprovado!
+                showView(null);
+                getEl('final-message').classList.remove('hidden');
+                displayGames(data.games);
             }
         }
 
-        // --- FUNÇÃO QUE VERIFICA O STATUS DO PAGAMENTO PERIODICAMENTE ---
         function startPaymentStatusCheck(paymentId) {
             statusMessage.textContent = 'Aguardando confirmação do pagamento...';
-            
             const checkStatus = async () => {
                 try {
                     const response = await fetch(`${VERCEL_BACKEND_URL}/api/generate-games`, {
@@ -191,132 +180,127 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ paymentId })
                     });
-
-                    if (response.status === 200) { // SUCESSO! Pagamento Aprovado
+                    if (response.status === 200) {
                         const data = await response.json();
                         onPaymentSuccess(data);
-                    } else if (response.status === 402) { // PENDENTE. Pagamento ainda não confirmado
-                        console.log(`Status do pagamento: Pendente. Verificando novamente...`);
-                    } else { // ERRO.
-                        clearInterval(paymentCheckInterval); 
-                        const errorData = await response.json().catch(() => ({ error: "Erro desconhecido no servidor." }));
-                        statusMessage.textContent = `Erro ao confirmar pagamento: ${errorData.error}`;
-                        console.error(`Erro na verificação (código: ${response.status}):`, errorData);
+                    } else if (response.status !== 402) {
+                        clearInterval(paymentCheckInterval);
+                        const errorData = await response.json().catch(() => ({ error: "Erro desconhecido." }));
+                        statusMessage.textContent = `Erro: ${errorData.error}`;
                     }
-                } catch (error) {
-                    console.error('Erro de conexão ao verificar o pagamento.', error);
-                    // Opcional: poderia parar de verificar após X tentativas falhas de conexão
-                }
+                } catch (error) { console.error('Erro de conexão ao verificar pagamento.', error); }
             };
-
-            // Começa a verificar após 3 segundos, e depois a cada 6 segundos.
             setTimeout(() => {
-                checkStatus(); 
+                checkStatus();
                 paymentCheckInterval = setInterval(checkStatus, 6000);
             }, 3000);
         }
 
-        // --- FUNÇÃO QUE CRIA O PAGAMENTO PIX ---
         async function createPixPayment() {
             showView('pix-view');
             const pixContainer = getEl('pix-view');
             pixContainer.innerHTML = `<p>Gerando PIX...</p>`;
-            
             try {
-                const payload = {
-                    email: userEmail,
-                    amount: selectedPlan.amount,
-                    description: selectedPlan.description,
-                    planType: selectedPlan.type
-                };
-
                 const response = await fetch(`${VERCEL_BACKEND_URL}/api/create-pix-payment`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({
+                        email: userEmail,
+                        amount: selectedPlan.amount,
+                        description: selectedPlan.description,
+                        planType: selectedPlan.type
+                    })
                 });
-
                 if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({ message: 'Falha na comunicação com o servidor.' }));
-                    throw new Error(errorData.error || 'Não foi possível gerar o PIX.');
+                    const err = await response.json().catch(()=>({error: "Erro de comunicação."}));
+                    throw new Error(err.error);
                 }
-                
                 const data = await response.json();
-
-                if (!data.qrCodeBase64 || !data.paymentId) {
-                    throw new Error('A resposta do servidor está incompleta. Tente novamente.');
-                }
-                
-                // Insere o QR Code e o botão de copiar na tela
                 pixContainer.innerHTML = `
                     <h3 class="font-semibold text-lg mb-4">Finalizar Pagamento: ${selectedPlan.title}</h3>
                     <p class="font-semibold">Escaneie o QR Code ou use o Copia e Cola:</p>
-                    <img src="data:image/png;base64,${data.qrCodeBase64}" alt="QR Code PIX" class="mx-auto border-4 border-white rounded-lg my-4">
+                    <img src="data:image/png;base64,${data.qrCodeBase64}" alt="QR Code PIX" class="mx-auto border-4 rounded-lg my-4">
                     <div class="flex">
-                        <input type="text" id="pix-copy-paste-code" readonly value="${data.qrCode}" class="w-full px-3 py-2 border border-gray-300 rounded-l-md dark:bg-gray-700 dark:border-gray-600">
+                        <input type="text" readonly value="${data.qrCode}" class="w-full px-3 py-2 border rounded-l-md dark:bg-gray-700 dark:border-gray-600">
                         <button id="copy-pix-btn" class="bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold p-3 rounded-r-md">Copiar</button>
                     </div>`;
-                
-                getEl('copy-pix-btn').addEventListener('click', (e) => {
+                getEl('copy-pix-btn').addEventListener('click', e => {
                     navigator.clipboard.writeText(data.qrCode);
                     e.target.textContent = 'Copiado!';
                     setTimeout(() => { e.target.textContent = 'Copiar'; }, 2000);
                 });
-
-                // Inicia a verificação do status do pagamento
                 startPaymentStatusCheck(data.paymentId);
-
             } catch (error) {
                 pixContainer.innerHTML = `<p class="text-red-500">${error.message}</p>
-                <button type="button" id="back-to-email-btn" class="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg mt-4">↩️ Tentar Novamente</button>`;
-                getEl('back-to-email-btn').addEventListener('click', () => showView('email-view'));
+                <button onclick="showView('email-view')" class="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-lg mt-4">↩️ Tentar Novamente</button>`;
+            }
+        }
+
+        // --- NOVA FUNÇÃO PRINCIPAL QUE VERIFICA O ACESSO NO NAVEGADOR ---
+        function checkSubscription() {
+            const accessPassJSON = localStorage.getItem('lotofacilAccessPass');
+            if (!accessPassJSON) {
+                showView('plan-selection-view');
+                return;
+            }
+
+            const accessPass = JSON.parse(accessPassJSON);
+            const expiryDate = new Date(accessPass.expiresAt);
+
+            if (expiryDate > new Date()) {
+                // Acesso VÁLIDO
+                const diffTime = expiryDate - new Date();
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                getEl('days-left').textContent = diffDays;
+                getEl('subscription-info').classList.remove('hidden');
+                showView('subscriber-view');
+                generateLotofacilGames(); // Gera os primeiros jogos para o assinante
+            } else {
+                // Acesso EXPIRADO
+                localStorage.removeItem('lotofacilAccessPass');
+                showView('plan-selection-view');
             }
         }
 
         // --- INICIALIZAÇÃO E EVENTOS ---
         document.addEventListener('DOMContentLoaded', async () => {
-            showView('loading-view'); // Mostra a tela de carregamento
-
+            showView('loading-view');
             try {
-                // Busca a Chave Pública do backend para inicializar o MP
-                const configResponse = await fetch(`${VERCEL_BACKEND_URL}/api/get-config`); 
-                if (!configResponse.ok) throw new Error("Não foi possível carregar as configurações de pagamento.");
-                
+                const configResponse = await fetch(`${VERCEL_BACKEND_URL}/api/get-config`);
+                if (!configResponse.ok) throw new Error("Falha ao carregar configs.");
                 const { publicKey } = await configResponse.json();
-                if (!publicKey) throw new Error("Chave pública não recebida do servidor.");
-                
+                if (!publicKey) throw new Error("Chave pública inválida.");
                 mp = new MercadoPago(publicKey);
 
-                // Em vez de verificar a assinatura, vamos direto para a seleção de planos.
-                showView('plan-selection-view');
+                // A MÁGICA ACONTECE AQUI: verifica o acesso salvo no navegador
+                checkSubscription();
 
             } catch(e) {
-                console.error("Falha ao inicializar o sistema de pagamento.", e);
-                statusMessage.textContent = 'Erro ao carregar o sistema de pagamento. Por favor, recarregue a página.';
-                showView(null); // Esconde todas as views em caso de erro fatal
-                return;
+                console.error("Falha ao inicializar.", e);
+                statusMessage.textContent = 'Erro ao carregar o sistema. Recarregue a página.';
+                showView(null);
             }
 
-            // Evento para o botão de Jogada Única
             getEl('single-play-btn').addEventListener('click', () => {
                 selectedPlan = plans.single;
                 getEl('user-email').value = userEmail;
                 showView('email-view');
             });
 
-            // O botão de Acesso Mensal está desativado, então não precisa de evento por enquanto.
-            // getEl('monthly-play-btn').addEventListener('click', () => { ... });
-
-            // Evento para o formulário de e-mail
+            getEl('monthly-play-btn').addEventListener('click', () => {
+                selectedPlan = plans.monthly;
+                getEl('user-email').value = userEmail;
+                showView('email-view');
+            });
+            
             getEl('email-form').addEventListener('submit', (e) => {
                 e.preventDefault();
                 userEmail = getEl('user-email').value;
-                localStorage.setItem('lotofacilUserEmail', userEmail);
                 createPixPayment();
             });
-            
-            // A lógica de gerar jogos para assinantes não é necessária agora.
-            // getEl('generate-new-games-btn').addEventListener('click', generateSubscriberGames);
+
+            getEl('generate-new-games-btn').addEventListener('click', generateLotofacilGames);
         });
     </script>
 </body>
