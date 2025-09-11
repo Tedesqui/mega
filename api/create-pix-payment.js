@@ -6,28 +6,22 @@ const client = new MercadoPagoConfig({
 });
 
 export default async function handler(request, response) {
-    // Permite que o frontend (em outro domínio, se for o caso) se comunique com esta API
-    if (request.method === 'OPTIONS') {
-        return response.status(200).send('OK');
-    }
-
-    // Aceita apenas requisições do tipo POST
     if (request.method !== 'POST') {
         return response.status(405).json({ error: 'Method Not Allowed' });
     }
 
-    const { email, amount, description, planType } = request.body;
+    const { email, description, planType } = request.body;
 
-    // Validação dos campos recebidos do frontend
-    if (!email || !amount || !description || !planType) {
-        return response.status(400).json({ error: 'Campos obrigatórios ausentes: email, amount, description, planType.' });
+    if (!email || !description || !planType) {
+        return response.status(400).json({ error: 'Campos obrigatórios ausentes.' });
     }
 
-    // Define a data de expiração do PIX para 30 minutos a partir de agora
     const expirationDate = new Date(Date.now() + 30 * 60 * 1000).toISOString();
 
     const payment_data = {
-        transaction_amount: Number(amount),
+        // <-- ALTERAÇÃO: Valor do PIX fixado em R$ 1,00 para testes.
+        // O valor original `Number(amount)` foi removido.
+        transaction_amount: 1.00, 
         description: description,
         payment_method_id: 'pix',
         payer: {
@@ -44,7 +38,6 @@ export default async function handler(request, response) {
         const payment = new Payment(client);
         const result = await payment.create({ body: payment_data });
 
-        // Se o pagamento for criado com sucesso, retorna os dados para o frontend
         response.status(201).json({
             paymentId: result.id,
             qrCode: result.point_of_interaction.transaction_data.qr_code,
