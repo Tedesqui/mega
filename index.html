@@ -177,14 +177,15 @@
                     if (response.status === 200) {
                         const data = await response.json();
                         onPaymentSuccess(data);
-                    } else if (response.status >= 400) { // Erros de cliente (4xx) ou servidor (5xx)
-                        clearInterval(paymentCheckInterval);
-                        statusMessage.textContent = 'Ocorreu um erro ao verificar o pagamento. Recarregue a página e tente novamente.';
+                    } else if (response.status >= 400) {
+                        // Loga o erro para depuração, mas não para o processo nem mostra uma mensagem de erro ao usuário.
+                        // A verificação continuará na próxima iteração.
+                        console.error(`Falha na verificação de status (código: ${response.status}). Tentando novamente em breve...`);
                     }
                     // Para qualquer outro status (como 202 - pendente), não fazemos nada e apenas esperamos a próxima verificação.
                 } catch (error) {
-                    clearInterval(paymentCheckInterval);
-                    statusMessage.textContent = 'Erro de conexão ao verificar o pagamento.';
+                    // Se houver um erro de rede, também não paramos, apenas logamos e tentamos de novo.
+                    console.error('Erro de conexão ao verificar o pagamento.', error);
                 }
             };
 
