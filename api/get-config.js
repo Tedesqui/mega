@@ -1,18 +1,14 @@
 export default async function handler(request, response) {
-    // Tratamento para requisições OPTIONS do CORS
-    if (request.method === 'OPTIONS') {
-        return response.status(200).send('OK');
+    if (request.method !== 'GET') {
+        return response.status(405).json({ error: 'Método Não Permitido' });
     }
 
-    // Pega a Public Key das variáveis de ambiente da Vercel
     const publicKey = process.env.MERCADO_PAGO_PUBLIC_KEY;
 
     if (!publicKey) {
-        return response.status(500).json({ error: 'Chave pública não configurada no servidor.' });
+        console.error("A chave pública do Mercado Pago não foi configurada nas variáveis de ambiente.");
+        return response.status(500).json({ error: 'Erro de configuração interna do servidor.' });
     }
 
-    // Envia a chave como resposta
-    response.status(200).json({
-        publicKey: publicKey,
-    });
+    response.status(200).json({ publicKey: publicKey });
 }
