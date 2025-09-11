@@ -158,18 +158,23 @@
                 localStorage.setItem('lotofacilUserEmail', data.email);
                 userEmail = data.email;
                 
-                // CORREÇÃO CRÍTICA: Pula a re-verificação e vai direto para a tela de sucesso do assinante.
-                // Isso dá feedback imediato ao usuário e é mais robusto contra atrasos do banco de dados.
-                daysLeft.textContent = 30; // Assume 30 dias imediatamente.
+                daysLeft.textContent = 30; 
                 subtitle.textContent = 'Pagamento aprovado! Você é um assinante.';
                 subscriptionInfo.classList.remove('hidden');
                 showView('subscriber-view');
                 generateSubscriberGames();
 
             } else {
-                showView(null); // Esconde todas as views principais (como a do PIX)
-                finalMessage.classList.remove('hidden');
-                displayGames(data.games);
+                // Lógica para jogada única
+                if (data && Array.isArray(data.games) && data.games.length > 0) {
+                    showView(null); 
+                    finalMessage.classList.remove('hidden');
+                    displayGames(data.games);
+                } else {
+                    console.error("Payload de sucesso para jogada única inválido:", data);
+                    statusMessage.textContent = 'Pagamento aprovado, mas houve um erro ao gerar seus jogos. Por favor, contate o suporte.';
+                    showView(null);
+                }
             }
         }
 
@@ -183,11 +188,18 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ paymentId })
                     });
+
                     if (response.status === 200) {
                         const data = await response.json();
                         onPaymentSuccess(data);
-                    } else if (response.status >= 400) {
-                        console.error(`Falha na verificação de status (código: ${response.status}). Tentando novamente em breve...`);
+                    } else if (response.status === 202 || response.status === 402) {
+                        console.log(`Status do pagamento: Pendente (código ${response.status}). Verificando novamente...`);
+                    } else {
+                        // Erro definitivo (400, 404, 500, etc.)
+                        clearInterval(paymentCheckInterval); 
+                        const errorData = await response.json().catch(() => ({ error: "Erro desconhecido no servidor." }));
+                        statusMessage.textContent = `Erro ao confirmar pagamento: ${errorData.error}`;
+                        console.error(`Erro definitivo na verificação (código: ${response.status}):`, errorData);
                     }
                 } catch (error) {
                     console.error('Erro de conexão ao verificar o pagamento.', error);
@@ -223,7 +235,7 @@
         }
 
         async function checkSubscription(retries = 3) {
-            if (retries === 3) showView('loading-view'); // Mostra o loading apenas na primeira tentativa
+            if (retries === 3) showView('loading-view');
             if (!userEmail) {
                 showView('plan-selection-view');
                 return;
@@ -254,12 +266,9 @@
             } catch (error) {
                 console.error(`Falha na verificação da assinatura (tentativa restante: ${retries - 1})`, error);
                 if (retries > 1) {
-                    // Tenta novamente após 2 segundos
                     setTimeout(() => checkSubscription(retries - 1), 2000);
                 } else {
-                    // Todas as tentativas falharam
-                    statusMessage.textContent = 'Não foi possível verificar a assinatura. Verifique sua conexão e recarregue a página.';
-                    // Mostra a tela de planos para não deixar o usuário travado no loading
+                    statusMessage.textContent = 'Não foi possível verificar sua sessão. Por favor, escolha um plano para continuar.';
                     showView('plan-selection-view');
                 }
             }
@@ -333,19 +342,19 @@
 
             getEl('single-play-btn').addEventListener('click', () => {
                 selectedPlan = plans.single;
-                getEl('user-email').value = userEmail; // Preenche o e-mail
+                getEl('user-email').value = userEmail;
                 showView('email-view');
             });
             getEl('monthly-play-btn').addEventListener('click', () => {
                 selectedPlan = plans.monthly;
-                getEl('user-email').value = userEmail; // Preenche o e-mail
+                getEl('user-email').value = userEmail;
                 showView('email-view');
             });
 
             getEl('email-form').addEventListener('submit', (e) => {
                 e.preventDefault();
                 userEmail = getEl('user-email').value;
-                localStorage.setItem('lotofacilUserEmail', userEmail); // Salva o e-mail imediatamente
+                localStorage.setItem('lotofacilUserEmail', userEmail);
                 createPixPayment();
             });
 
@@ -356,3 +365,4 @@
     </script>
 </body>
 </html>
+
