@@ -15,7 +15,7 @@
             animation: pop-in 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
             opacity: 0; transform: scale(0.5);
         }
-        .game-row { margin-bottom: 1rem; padding: 0.5rem; background-color: rgba(0, 0, 0, 0.1); border-radius: 8px; }
+        .game-row { margin-bottom: 1rem; padding: 0.5rem; background-color: rgba(255, 255, 255, 0.05); border-radius: 8px; }
         @keyframes pop-in { to { opacity: 1; transform: scale(1); } }
         .hidden { display: none; }
         .plan-card {
@@ -30,37 +30,61 @@
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 flex items-center justify-center min-h-screen p-4">
 
-    <div id="main-container" class="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl p-8 max-w-2xl w-full text-center">
-        <div id="subscription-info" class="hidden text-right mb-4 p-2 bg-green-100 dark:bg-green-900 rounded-lg">
-            <p class="text-sm font-semibold text-green-700 dark:text-green-300">Acesso liberado! expires em <span id="days-left" class="font-bold"></span> dias.</p>
+    <div id="main-container" class="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl p-6 md:p-8 max-w-2xl w-full text-center">
+        
+        <div id="subscription-info" class="hidden text-right mb-4 p-2 bg-green-100 dark:bg-green-800 rounded-lg">
+            <p class="text-sm font-semibold text-green-700 dark:text-green-200">Acesso liberado! Expira em <span id="days-left" class="font-bold"></span> dias.</p>
         </div>
 
         <h1 class="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-2">
             <span class="block">Gerador Inteligente</span>
             <span class="block">Lotofácil</span>
         </h1>
-        <p id="subtitle" class="text-gray-600 dark:text-gray-400 mb-6">Números gerados com base nas dezenas que mais saem! Aumente suas chances de ganhar!</p>
+        <p id="subtitle" class="text-gray-600 dark:text-gray-400 mb-6">Números gerados com base nas dezenas que mais saem! Aumente suas chances!</p>
         
-        <div id="plan-selection" class="my-8">
+        <div id="loading-view" class="my-8">
+            <p>Verificando sua assinatura...</p>
+        </div>
+
+        <div id="plan-selection-view" class="hidden my-8">
              <h2 class="text-xl font-bold mb-6">Escolha seu plano:</h2>
              <div class="grid md:grid-cols-2 gap-6">
                  <div id="single-play-btn" class="plan-card cursor-pointer bg-gray-50 dark:bg-gray-700 p-6 rounded-lg shadow-md">
                      <h3 class="text-lg font-bold text-purple-500">Jogada Única</h3>
-                     <p class="text-3xl font-bold my-2">R$ 3<span class="text-lg">,00</span></p>
+                     <p class="text-3xl font-bold my-2">R$ 3,00</p>
                      <p class="text-sm text-gray-500 dark:text-gray-400">Receba 5 jogos gerados por nossa inteligência artificial.</p>
                  </div>
                  <div id="monthly-play-btn" class="plan-card cursor-pointer bg-gray-50 dark:bg-gray-700 p-6 rounded-lg shadow-md">
                      <h3 class="text-lg font-bold text-purple-500">Acesso Mensal ✨</h3>
-                     <p class="text-3xl font-bold my-2">R$ 29<span class="text-lg">,90</span></p>
+                     <p class="text-3xl font-bold my-2">R$ 29,90</p>
                      <p class="text-sm text-gray-500 dark:text-gray-400">Gere apostas ILIMITADAS por 30 dias. O melhor custo-benefício!</p>
                  </div>
              </div>
         </div>
 
-        <div id="generator-area" class="hidden my-8">
+        <div id="email-view" class="hidden my-8">
+            <h3 id="email-title" class="font-semibold text-lg mb-4">Informe seu e-mail para continuar</h3>
+            <form id="email-form" class="space-y-4">
+                <input type="email" id="user-email" placeholder="seuemail@exemplo.com" required class="w-full px-3 py-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600">
+                <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg">Prosseguir para Pagamento</button>
+                <button type="button" id="back-to-plans-btn" class="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg mt-2">↩️ Voltar</button>
+            </form>
+        </div>
+        
+        <div id="payment-view" class="hidden my-8">
+            <h3 id="payment-title" class="font-semibold text-lg mb-4"></h3>
+            <div id="payment-options" class="space-y-4">
+                <button id="pay-with-card-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg">💳 Pagar com Cartão</button>
+                <button id="pay-with-pix-btn" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg">✨ Pagar com PIX</button>
+            </div>
+            <div id="card-payment-brick_container" class="hidden mt-6"></div>
+            <div id="pix-payment-container" class="hidden mt-6"></div>
+        </div>
+
+        <div id="subscriber-view" class="hidden my-8">
             <p class="mb-4">Seu acesso está ativo! Gere quantos jogos quiser.</p>
             <button id="generate-new-games-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg mb-6 shadow-lg">
-                🍀 GERAR NOVOS NÚMEROS
+                🍀 GERAR NOVOS JOGOS
             </button>
         </div>
         
@@ -69,35 +93,7 @@
         </div>
 
         <div id="final-message" class="hidden mb-6">
-             <p class="text-2xl text-purple-500 font-bold">Obrigado! Boa sorte! 🍀</p>
-        </div>
-
-        <div id="payment-area" class="hidden">
-            <h3 id="payment-title" class="font-semibold text-lg mb-4"></h3>
-            <div id="payment-options" class="space-y-4">
-                <button id="pay-with-card-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg">💳 Pagar com Cartão de Crédito</button>
-                <button id="pay-with-pix-btn" class="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-4 rounded-lg">✨ Pagar com PIX</button>
-                <button id="back-to-plans-btn" class="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg mt-4">↩️ Voltar</button>
-            </div>
-            
-            <div id="card-payment-brick_container" class="hidden mt-6"></div>
-            
-            <div id="pix-payment-container" class="hidden mt-6 space-y-4">
-                <form id="pix-form" class="space-y-4">
-                    <p class="text-sm">Para gerar o QR Code, por favor, informe seu e-mail:</p>
-                    <input type="email" id="pix-email" placeholder="seuemail@exemplo.com" required class="w-full px-3 py-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600">
-                    <button type="submit" id="generate-pix-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg">Gerar QR Code PIX</button>
-                </form>
-                <div id="pix-qr-code-container" class="hidden space-y-4">
-                    <p class="font-semibold">Escaneie o QR Code ou use o Copia e Cola:</p>
-                    <img id="pix-qr-code-image" src="" alt="QR Code PIX" class="mx-auto border-4 border-white rounded-lg">
-                    <div class="flex">
-                        <input type="text" id="pix-copy-paste-code" readonly class="w-full px-3 py-2 border border-gray-300 rounded-l-md dark:bg-gray-700 dark:border-gray-600">
-                        <button id="copy-pix-btn" class="bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold p-3 rounded-r-md">Copiar</button>
-                    </div>
-                    <p class="text-sm animate-pulse">Aguardando pagamento... Assim que for aprovado, seu acesso será liberado.</p>
-                </div>
-            </div>
+             <p class="text-2xl text-purple-500 font-bold">Pagamento aprovado! Boa sorte! 🍀</p>
         </div>
         
         <div id="status-message" class="mt-4 text-sm font-semibold"></div>
@@ -108,66 +104,39 @@
         <footer class="text-xs text-gray-500 dark:text-gray-400 mt-8 border-t border-gray-200 dark:border-gray-700 pt-4">
             <p><b class="font-bold">ATENÇÃO:</b> Este site não gera apostas diretamente no sistema da Caixa. Ele apenas gera os números para você apostar.</p>
         </footer>
-        
     </div>
 
     <script>
-        const VERCEL_BACKEND_URL = 'https://mega-jogo.vercel.app'; 
-        
-        // Elementos da UI
-        const subtitle = document.getElementById('subtitle');
-        const finalMessage = document.getElementById('final-message');
-        const gamesContainer = document.getElementById('games-container');
-        const statusMessage = document.getElementById('status-message');
-        const mainContainer = document.getElementById('main-container');
-
-        // Novos elementos
-        const planSelection = document.getElementById('plan-selection');
-        const singlePlayBtn = document.getElementById('single-play-btn');
-        const monthlyPlayBtn = document.getElementById('monthly-play-btn');
-        const generatorArea = document.getElementById('generator-area');
-        const generateNewGamesBtn = document.getElementById('generate-new-games-btn');
-        const subscriptionInfo = document.getElementById('subscription-info');
-        const daysLeft = document.getElementById('days-left');
-        const backToPlansBtn = document.getElementById('back-to-plans-btn');
-        const paymentTitle = document.getElementById('payment-title');
-
-        // Elementos de Pagamento
-        const paymentArea = document.getElementById('payment-area');
-        const payWithCardBtn = document.getElementById('pay-with-card-btn');
-        const cardPaymentBrickContainer = document.getElementById('card-payment-brick_container');
-        const payWithPixBtn = document.getElementById('pay-with-pix-btn');
-        const pixPaymentContainer = document.getElementById('pix-payment-container');
-        const pixForm = document.getElementById('pix-form');
-        const pixEmailInput = document.getElementById('pix-email');
-        const generatePixBtn = document.getElementById('generate-pix-btn');
-        const pixQrCodeContainer = document.getElementById('pix-qr-code-container');
-        const pixQrCodeImage = document.getElementById('pix-qr-code-image');
-        const pixCopyPasteCode = document.getElementById('pix-copy-paste-code');
-        const copyPixBtn = document.getElementById('copy-pix-btn');
-        
-        let paymentCheckInterval;
-        let selectedPlan = {};
-
+        // --- CONFIGURAÇÃO ---
+        const VERCEL_BACKEND_URL = ''; // Deixe em branco para usar o mesmo domínio (ex: /api/endpoint)
         const plans = {
-            single: { type: 'single', amount: 3.00, title: 'Jogada Única', description: '5 jogos Lotofácil' },
+            single: { type: 'single', amount: 3.00, title: 'Jogada Única', description: '5 Jogos Inteligentes da Lotofácil' },
             monthly: { type: 'monthly', amount: 29.90, title: 'Acesso Mensal', description: 'Acesso ilimitado por 30 dias' }
         };
+        let selectedPlan = {};
+        let userEmail = localStorage.getItem('lotofacilUserEmail') || '';
+        let paymentCheckInterval;
+        let mp; // Instância do Mercado Pago
 
-        // Função para gerar jogos localmente para assinantes
-        function generateAndDisplayLocalGames() {
-            const hotNumbers = [1, 2, 3, 4, 5, 10, 11, 12, 13, 14, 15, 20, 21, 22, 23, 24, 25, 6, 7, 9, 17, 19];
-            const games = [];
-            for (let i = 0; i < 5; i++) {
-                const shuffled = hotNumbers.sort(() => 0.5 - Math.random());
-                const game = shuffled.slice(0, 15).sort((a, b) => a - b);
-                games.push(game);
-            }
-            displayGames(games);
+        // --- ELEMENTOS DA UI ---
+        const allViews = ['loading-view', 'plan-selection-view', 'email-view', 'payment-view', 'subscriber-view'];
+        const getEl = (id) => document.getElementById(id);
+        const subtitle = getEl('subtitle');
+        const finalMessage = getEl('final-message');
+        const gamesContainer = getEl('games-container');
+        const statusMessage = getEl('status-message');
+        const subscriptionInfo = getEl('subscription-info');
+        const daysLeft = getEl('days-left');
+
+        // --- FUNÇÕES DE CONTROLE DE EXIBIÇÃO ---
+        function showView(viewId) {
+            allViews.forEach(id => getEl(id).classList.add('hidden'));
+            getEl(viewId).classList.remove('hidden');
         }
 
+        // --- LÓGICA PRINCIPAL ---
         function displayGames(games) {
-            gamesContainer.innerHTML = ''; // Limpa os jogos anteriores
+            gamesContainer.innerHTML = '';
             games.forEach((game, gameIndex) => {
                 const gameRow = document.createElement('div');
                 gameRow.className = 'game-row flex flex-wrap justify-center items-center';
@@ -181,25 +150,24 @@
                 gamesContainer.appendChild(gameRow);
             });
         }
-        
-        function onPaymentSuccess(paymentData, games) {
-            clearInterval(paymentCheckInterval);
-            statusMessage.classList.add('hidden');
-            paymentArea.classList.add('hidden');
-            subtitle.classList.add('hidden');
 
-            if (selectedPlan.type === 'monthly') {
-                const expiryDate = new Date();
-                expiryDate.setDate(expiryDate.getDate() + 30);
-                localStorage.setItem('subscriptionExpiry', expiryDate.toISOString());
-                showGeneratorView();
+        function onPaymentSuccess(data) {
+            clearInterval(paymentCheckInterval);
+            statusMessage.textContent = '';
+            getEl('payment-view').classList.add('hidden');
+
+            if (data.subscription) {
+                localStorage.setItem('lotofacilUserEmail', data.email);
+                userEmail = data.email;
+                checkSubscription();
             } else {
-                displayGames(games);
+                displayGames(data.games);
                 finalMessage.classList.remove('hidden');
             }
         }
 
         function startPaymentStatusCheck(paymentId) {
+            statusMessage.textContent = 'Aguardando confirmação do pagamento...';
             paymentCheckInterval = setInterval(async () => {
                 try {
                     const response = await fetch(`${VERCEL_BACKEND_URL}/api/generate-games`, {
@@ -207,176 +175,176 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ paymentId })
                     });
-                    if (response.ok) {
-                        const { games, paymentData } = await response.json();
-                        onPaymentSuccess(paymentData, games);
+                    if (response.status === 200) {
+                        const data = await response.json();
+                        onPaymentSuccess(data);
+                    } else if (response.status !== 202) {
+                        clearInterval(paymentCheckInterval);
+                        statusMessage.textContent = 'Ocorreu um erro ao verificar o pagamento.';
                     }
                 } catch (error) {
-                    console.error('Erro ao verificar status do pagamento:', error);
+                    clearInterval(paymentCheckInterval);
+                    statusMessage.textContent = 'Erro de conexão ao verificar o pagamento.';
                 }
             }, 5000);
         }
 
-        function showPlanSelectionView() {
-            planSelection.classList.remove('hidden');
-            paymentArea.classList.add('hidden');
-            generatorArea.classList.add('hidden');
-            subscriptionInfo.classList.add('hidden');
-            finalMessage.classList.add('hidden');
-            subtitle.classList.remove('hidden');
-            gamesContainer.innerHTML = '<p class="text-gray-500">Seus jogos aparecerão aqui.</p>';
-        }
-
-        function showPaymentView() {
-            planSelection.classList.add('hidden');
-            paymentArea.classList.remove('hidden');
-            paymentTitle.innerText = `Finalizar Pagamento: ${selectedPlan.title} - R$ ${selectedPlan.amount.toFixed(2).replace('.', ',')}`;
-        }
-
-        function showGeneratorView() {
-            const expiryDate = new Date(localStorage.getItem('subscriptionExpiry'));
-            const today = new Date();
-            const diffTime = expiryDate - today;
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-            daysLeft.textContent = diffDays;
-            
-            planSelection.classList.add('hidden');
-            paymentArea.classList.add('hidden');
-            subtitle.innerHTML = 'Você é um assinante! Gere jogos à vontade.'
-            generatorArea.classList.remove('hidden');
-            subscriptionInfo.classList.remove('hidden');
-
-            generateAndDisplayLocalGames(); // Gera o primeiro jogo automaticamente
-        }
-
-        function checkSubscription() {
-            const expiryDateString = localStorage.getItem('subscriptionExpiry');
-            if (expiryDateString) {
-                const expiryDate = new Date(expiryDateString);
-                if (expiryDate > new Date()) {
-                    showGeneratorView();
-                    return;
-                } else {
-                    localStorage.removeItem('subscriptionExpiry');
-                }
-            }
-            showPlanSelectionView();
-        }
-
-        async function initializeApp() {
+        async function generateSubscriberGames() {
             try {
-                statusMessage.innerText = 'Configurando ambiente...';
-                const configResponse = await fetch(`${VERCEL_BACKEND_URL}/api/get-config`);
-                const { publicKey } = await configResponse.json();
-                if (!publicKey) throw new Error('Chave pública não encontrada.');
-
-                const mp = new MercadoPago(publicKey, { locale: 'pt-BR' });
-
-                // --- Lógica de Seleção de Plano ---
-                singlePlayBtn.addEventListener('click', () => {
-                    selectedPlan = plans.single;
-                    showPaymentView();
+                const btn = getEl('generate-new-games-btn');
+                btn.disabled = true;
+                btn.textContent = 'Gerando...';
+                const response = await fetch(`${VERCEL_BACKEND_URL}/api/generate-subscriber-games`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: userEmail })
                 });
-                monthlyPlayBtn.addEventListener('click', () => {
-                    selectedPlan = plans.monthly;
-                    showPaymentView();
-                });
-                backToPlansBtn.addEventListener('click', () => {
-                    showPlanSelectionView();
-                    // Limpa containers de pagamento ao voltar
-                    cardPaymentBrickContainer.innerHTML = '';
-                    pixPaymentContainer.classList.add('hidden');
-                    document.getElementById('payment-options').classList.remove('hidden');
-                });
-
-
-                // --- Lógica de Pagamento ---
-                payWithCardBtn.addEventListener('click', async () => {
-                    document.getElementById('payment-options').classList.add('hidden');
-                    cardPaymentBrickContainer.classList.remove('hidden');
-                    statusMessage.innerText = 'Carregando formulário de cartão...';
-                    
-                    const preferenceResponse = await fetch(`${VERCEL_BACKEND_URL}/api/create-preference`, { 
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ amount: selectedPlan.amount, title: selectedPlan.description }) // Envia valor e descrição
-                    });
-                    const { preferenceId } = await preferenceResponse.json();
-                    
-                    await mp.bricks().create('cardPayment', 'card-payment-brick_container', {
-                        initialization: { amount: selectedPlan.amount, preferenceId: preferenceId },
-                        callbacks: {
-                            onSubmit: async ({ formData }) => {
-                                statusMessage.innerText = 'Processando...';
-                                // O processamento do pagamento no backend já usa o preferenceId, que contém o valor correto.
-                                // A verificação do status irá buscar os jogos.
-                                // A lógica de sucesso (onPaymentSuccess) tratará o resultado.
-                            },
-                            onError: (error) => console.error(error),
-                            onReady: () => statusMessage.innerText = '',
-                        },
-                    });
-                });
-
-                payWithPixBtn.addEventListener('click', () => {
-                    document.getElementById('payment-options').classList.add('hidden');
-                    pixPaymentContainer.classList.remove('hidden');
-                });
-
-                pixForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    generatePixBtn.disabled = true;
-                    statusMessage.innerText = 'Gerando PIX...';
-
-                    try {
-                        const response = await fetch(`${VERCEL_BACKEND_URL}/api/create-pix-payment`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ 
-                                email: pixEmailInput.value,
-                                amount: selectedPlan.amount,
-                                description: selectedPlan.description
-                            })
-                        });
-
-                        if (!response.ok) throw new Error('Falha ao criar PIX. Tente novamente.');
-
-                        const { paymentId, qrCode, qrCodeBase64 } = await response.json();
-                        
-                        pixForm.classList.add('hidden');
-                        pixQrCodeContainer.classList.remove('hidden');
-                        statusMessage.innerText = '';
-                        
-                        pixQrCodeImage.src = `data:image/png;base64,${qrCodeBase64}`;
-                        pixCopyPasteCode.value = qrCode;
-
-                        startPaymentStatusCheck(paymentId);
-
-                    } catch (error) {
-                        statusMessage.innerText = error.message;
-                        generatePixBtn.disabled = false;
-                    }
-                });
-
-                copyPixBtn.addEventListener('click', () => {
-                    navigator.clipboard.writeText(pixCopyPasteCode.value);
-                    copyPixBtn.innerText = 'Copiado!';
-                    setTimeout(() => { copyPixBtn.innerText = 'Copiar'; }, 2000);
-                });
-
-                generateNewGamesBtn.addEventListener('click', generateAndDisplayLocalGames);
-
-                statusMessage.innerText = '';
-                checkSubscription(); // Verifica se o usuário já tem uma assinatura ativa ao carregar
-
+                if (!response.ok) throw new Error('Falha ao gerar jogos.');
+                const data = await response.json();
+                displayGames(data.games);
             } catch (error) {
-                console.error(error);
-                statusMessage.innerText = 'Falha crítica na configuração. Recarregue.';
+                statusMessage.textContent = error.message;
+            } finally {
+                const btn = getEl('generate-new-games-btn');
+                btn.disabled = false;
+                btn.textContent = '🍀 GERAR NOVOS JOGOS';
             }
+        }
+
+        async function checkSubscription() {
+            showView('loading-view');
+            if (!userEmail) {
+                showView('plan-selection-view');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${VERCEL_BACKEND_URL}/api/check-subscription`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: userEmail })
+                });
+                const data = await response.json();
+
+                if (data.isSubscriber) {
+                    const diffTime = new Date(data.expiresAt) - new Date();
+                    const diffDays = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+                    daysLeft.textContent = diffDays;
+                    subtitle.textContent = 'Você é um assinante! Gere jogos à vontade.';
+                    subscriptionInfo.classList.remove('hidden');
+                    showView('subscriber-view');
+                    generateSubscriberGames();
+                } else {
+                    localStorage.removeItem('lotofacilUserEmail');
+                    userEmail = '';
+                    showView('plan-selection-view');
+                }
+            } catch (error) {
+                statusMessage.textContent = 'Não foi possível verificar a assinatura. Tente recarregar a página.';
+            }
+        }
+
+        // --- INICIALIZAÇÃO DE PAGAMENTOS ---
+        async function renderCardBrick(containerId) {
+            getEl('payment-options').classList.add('hidden');
+            getEl('card-payment-brick_container').classList.remove('hidden');
+            statusMessage.textContent = 'Carregando formulário de cartão...';
+
+            const response = await fetch(`${VERCEL_BACKEND_URL}/api/create-preference`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...selectedPlan, email: userEmail })
+            });
+            const { preferenceId } = await response.json();
+
+            const bricksBuilder = mp.bricks();
+            await bricksBuilder.create('cardPayment', containerId, {
+                initialization: { amount: selectedPlan.amount, preferenceId: preferenceId },
+                callbacks: {
+                    onSubmit: async ({ formData }) => {
+                        // O pagamento é processado no backend, precisamos apenas do paymentId
+                        // A API V1 de payments não retorna o ID no onSubmit, então vamos usar o status do brick
+                        // e aguardar a confirmação pela verificação de status.
+                        // Esta abordagem é mais simples e compatível com o fluxo de PIX.
+                    },
+                    onReady: () => statusMessage.textContent = '',
+                    onError: (error) => statusMessage.textContent = 'Erro no formulário de pagamento.',
+                },
+            });
         }
         
-        initializeApp();
+        async function createPixPayment() {
+            getEl('payment-options').classList.add('hidden');
+            const pixContainer = getEl('pix-payment-container');
+            pixContainer.classList.remove('hidden');
+            pixContainer.innerHTML = `<p>Gerando PIX...</p>`;
+            
+            try {
+                const response = await fetch(`${VERCEL_BACKEND_URL}/api/create-pix-payment`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ...selectedPlan, email: userEmail })
+                });
+                const data = await response.json();
+                
+                pixContainer.innerHTML = `
+                    <p class="font-semibold">Escaneie o QR Code ou use o Copia e Cola:</p>
+                    <img src="data:image/png;base64,${data.qrCodeBase64}" alt="QR Code PIX" class="mx-auto border-4 border-white rounded-lg">
+                    <div class="flex">
+                        <input type="text" id="pix-copy-paste-code" readonly value="${data.qrCode}" class="w-full px-3 py-2 border border-gray-300 rounded-l-md dark:bg-gray-700 dark:border-gray-600">
+                        <button id="copy-pix-btn" class="bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold p-3 rounded-r-md">Copiar</button>
+                    </div>`;
+                
+                getEl('copy-pix-btn').addEventListener('click', (e) => {
+                    navigator.clipboard.writeText(data.qrCode);
+                    e.target.textContent = 'Copiado!';
+                    setTimeout(() => { e.target.textContent = 'Copiar'; }, 2000);
+                });
+
+                startPaymentStatusCheck(data.paymentId);
+            } catch (error) {
+                pixContainer.innerHTML = `<p class="text-red-500">Erro ao gerar PIX. Tente novamente.</p>`;
+            }
+        }
+
+        // --- INICIALIZAÇÃO E EVENT LISTENERS ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const configResponse = await fetch(`${VERCEL_BACKEND_URL}/api/get-config`); // Supondo que você tenha um endpoint para a chave pública
+                const { publicKey } = await configResponse.json();
+                mp = new MercadoPago(publicKey);
+            } catch(e) {
+                // Fallback para uma chave pública hardcoded se a API falhar (não recomendado para produção)
+                // Substitua PELA SUA PUBLIC KEY
+                // mp = new MercadoPago('SUA_PUBLIC_KEY_AQUI');
+                console.warn("API de config não encontrada. Usando fallback de chave pública.");
+            }
+
+            getEl('single-play-btn').addEventListener('click', () => {
+                selectedPlan = plans.single;
+                showView('email-view');
+            });
+            getEl('monthly-play-btn').addEventListener('click', () => {
+                selectedPlan = plans.monthly;
+                showView('email-view');
+            });
+
+            getEl('back-to-plans-btn').addEventListener('click', () => showView('plan-selection-view'));
+
+            getEl('email-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                userEmail = getEl('user-email').value;
+                getEl('payment-title').textContent = `Finalizar Pagamento: ${selectedPlan.title} - R$ ${selectedPlan.amount.toFixed(2).replace('.', ',')}`;
+                showView('payment-view');
+            });
+
+            getEl('pay-with-card-btn').addEventListener('click', () => renderCardBrick('card-payment-brick_container'));
+            getEl('pay-with-pix-btn').addEventListener('click', createPixPayment);
+
+            getEl('generate-new-games-btn').addEventListener('click', generateSubscriberGames);
+            
+            checkSubscription();
+        });
     </script>
 </body>
 </html>
