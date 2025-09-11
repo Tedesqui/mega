@@ -238,8 +238,8 @@
                     showView('subscriber-view');
                     generateSubscriberGames();
                 } else {
-                    localStorage.removeItem('lotofacilUserEmail');
-                    userEmail = '';
+                    // CORREÇÃO: Não apaga mais o e-mail do usuário em caso de falha na verificação.
+                    // Apenas mostra a tela de seleção de planos.
                     showView('plan-selection-view');
                 }
             } catch (error) {
@@ -315,16 +315,19 @@
 
             getEl('single-play-btn').addEventListener('click', () => {
                 selectedPlan = plans.single;
+                getEl('user-email').value = userEmail; // Preenche o e-mail
                 showView('email-view');
             });
             getEl('monthly-play-btn').addEventListener('click', () => {
                 selectedPlan = plans.monthly;
+                getEl('user-email').value = userEmail; // Preenche o e-mail
                 showView('email-view');
             });
 
             getEl('email-form').addEventListener('submit', (e) => {
                 e.preventDefault();
                 userEmail = getEl('user-email').value;
+                localStorage.setItem('lotofacilUserEmail', userEmail); // Salva o e-mail imediatamente
                 createPixPayment();
             });
 
@@ -335,4 +338,3 @@
     </script>
 </body>
 </html>
-
