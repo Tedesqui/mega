@@ -157,7 +157,15 @@
             if (data.subscription) {
                 localStorage.setItem('lotofacilUserEmail', data.email);
                 userEmail = data.email;
-                checkSubscription();
+                
+                // CORREÇÃO CRÍTICA: Pula a re-verificação e vai direto para a tela de sucesso do assinante.
+                // Isso dá feedback imediato ao usuário e é mais robusto contra atrasos do banco de dados.
+                daysLeft.textContent = 30; // Assume 30 dias imediatamente.
+                subtitle.textContent = 'Pagamento aprovado! Você é um assinante.';
+                subscriptionInfo.classList.remove('hidden');
+                showView('subscriber-view');
+                generateSubscriberGames();
+
             } else {
                 showView(null); // Esconde todas as views principais (como a do PIX)
                 finalMessage.classList.remove('hidden');
