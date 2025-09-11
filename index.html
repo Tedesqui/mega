@@ -55,7 +55,7 @@
                  <div id="single-play-btn" class="plan-card cursor-pointer bg-blue-500 dark:bg-blue-700 text-white p-6 rounded-lg shadow-md">
                      <h3 class="text-lg font-bold text-white">Jogada Única</h3>
                      <p class="text-3xl font-bold my-2">R$ 3,00</p>
-                     <p class="text-sm text-white/90 dark:text-white/90 font-bold">Receba 5 jogos gerados por nossa Inteligência Artificial.</p>
+                     <p class="text-sm text-white/90 dark:text-white/90 font-bold">Receba 5 jogos gerados por nossa inteligência artificial.</p>
                  </div>
                  <div id="monthly-play-btn" class="plan-card cursor-pointer bg-green-500 dark:bg-green-700 text-white p-6 rounded-lg shadow-md">
                      <h3 class="text-lg font-bold text-white">Acesso Mensal ✨</h3>
@@ -288,7 +288,17 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ ...selectedPlan, email: userEmail })
                 });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ message: 'Falha na comunicação com o servidor.' }));
+                    throw new Error(errorData.error || 'Não foi possível gerar o PIX.');
+                }
+                
                 const data = await response.json();
+
+                if (!data.qrCodeBase64) {
+                    throw new Error('A resposta do servidor não incluiu um QR Code. Tente novamente.');
+                }
                 
                 pixContainer.innerHTML = `
                     <p class="font-semibold">Escaneie o QR Code ou use o Copia e Cola:</p>
@@ -306,7 +316,7 @@
 
                 startPaymentStatusCheck(data.paymentId);
             } catch (error) {
-                pixContainer.innerHTML = `<p class="text-red-500">Erro ao gerar PIX. Tente novamente.</p>`;
+                pixContainer.innerHTML = `<p class="text-red-500">${error.message}</p>`;
             }
         }
 
