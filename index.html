@@ -55,7 +55,7 @@
                  <div id="single-play-btn" class="plan-card cursor-pointer bg-blue-500 dark:bg-blue-700 text-white p-6 rounded-lg shadow-md">
                      <h3 class="text-lg font-bold text-white">Jogada Única</h3>
                      <p class="text-3xl font-bold my-2">R$ 3,00</p>
-                     <p class="text-sm text-white/90 dark:text-white/90 font-bold">Receba 5 jogos gerados por nossa Inteligência Artificial.</p>
+                     <p class="text-sm text-white/90 dark:text-white/90 font-bold">Receba 5 jogos gerados por nossa inteligência artificial.</p>
                  </div>
                  <div id="monthly-play-btn" class="plan-card cursor-pointer bg-green-500 dark:bg-green-700 text-white p-6 rounded-lg shadow-md">
                      <h3 class="text-lg font-bold text-white">Acesso Mensal ✨</h3>
@@ -105,9 +105,10 @@
     <script>
         // --- CONFIGURAÇÃO ---
         const VERCEL_BACKEND_URL = ''; // Deixe em branco para usar o mesmo domínio (ex: /api/endpoint)
+        // ATENÇÃO: Valores de pagamento alterados para R$ 1,00 para fins de teste.
         const plans = {
-            single: { type: 'single', amount: 3.00, title: 'Jogada Única', description: '5 Jogos Inteligentes da Lotofácil' },
-            monthly: { type: 'monthly', amount: 29.90, title: 'Acesso Mensal', description: 'Acesso ilimitado por 30 dias' }
+            single: { type: 'single', amount: 1.00, title: 'Jogada Única (Teste)', description: '5 Jogos Inteligentes da Lotofácil' },
+            monthly: { type: 'monthly', amount: 1.00, title: 'Acesso Mensal (Teste)', description: 'Acesso ilimitado por 30 dias' }
         };
         let selectedPlan = {};
         let userEmail = localStorage.getItem('lotofacilUserEmail') || '';
@@ -178,21 +179,16 @@
                         const data = await response.json();
                         onPaymentSuccess(data);
                     } else if (response.status >= 400) {
-                        // Loga o erro para depuração, mas não para o processo nem mostra uma mensagem de erro ao usuário.
-                        // A verificação continuará na próxima iteração.
                         console.error(`Falha na verificação de status (código: ${response.status}). Tentando novamente em breve...`);
                     }
-                    // Para qualquer outro status (como 202 - pendente), não fazemos nada e apenas esperamos a próxima verificação.
                 } catch (error) {
-                    // Se houver um erro de rede, também não paramos, apenas logamos e tentamos de novo.
                     console.error('Erro de conexão ao verificar o pagamento.', error);
                 }
             };
 
-            // Adiciona um atraso inicial de 3 segundos antes da primeira verificação
             setTimeout(() => {
-                checkStatus(); // Primeira verificação
-                paymentCheckInterval = setInterval(checkStatus, 6000); // Verificações seguintes com intervalo um pouco maior
+                checkStatus(); 
+                paymentCheckInterval = setInterval(checkStatus, 6000);
             }, 3000);
         }
 
@@ -277,7 +273,7 @@
                 
                 const data = await response.json();
 
-                if (!data.qrCodeBase64 || !data.paymentId) { // Validação extra
+                if (!data.qrCodeBase64 || !data.paymentId) {
                     throw new Error('A resposta do servidor está incompleta. Tente novamente.');
                 }
                 
@@ -339,3 +335,4 @@
     </script>
 </body>
 </html>
+
