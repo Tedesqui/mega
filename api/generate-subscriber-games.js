@@ -1,10 +1,6 @@
 import { createClient } from "@vercel/kv";
 
-// Inicializa o cliente KV para comunicar com a base de dados Upstash
-const kv = createClient({
-  url: process.env.UPSTASH_REDIS_REST_URL,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN,
-});
+// A inicialização do cliente KV foi movida para dentro da função handler.
 
 function generateGamesLogic() {
     const mostFrequentNumbers = [20, 10, 25, 11, 24, 13, 14, 4, 3, 2, 12, 1, 19, 5, 22, 18, 9, 15];
@@ -20,6 +16,20 @@ function generateGamesLogic() {
 }
 
 export default async function handler(request, response) {
+    // --- Verificação de Sanidade das Variáveis de Ambiente ---
+    // <-- ALTERAÇÃO: A verificar as variáveis corretas (KV_* em vez de UPSTASH_*)
+    if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) {
+        console.error('ERRO CRÍTICO: As variáveis de ambiente da base de dados (KV) não foram encontradas.');
+        return response.status(500).json({ error: 'Erro de configuração interna do servidor. A ligação com a base de dados falhou.' });
+    }
+
+    // Inicializa o cliente KV aqui, dentro da função, para garantir que as variáveis de ambiente existem.
+    // <-- ALTERAÇÃO: A usar as variáveis corretas (KV_* em vez de UPSTASH_*)
+    const kv = createClient({
+        url: process.env.KV_REST_API_URL,
+        token: process.env.KV_REST_API_TOKEN,
+    });
+
     if (request.method !== 'POST') {
         return response.status(405).json({ error: 'Método Não Permitido' });
     }
