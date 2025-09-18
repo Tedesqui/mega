@@ -4,6 +4,12 @@ const client = new MercadoPagoConfig({
     accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN
 });
 
+// Define os preços corretos no backend para maior segurança
+const PRICES = {
+    single: 5.00,
+    monthly: 29.90
+};
+
 export default async function handler(request, response) {
     if (request.method !== 'POST') {
         return response.status(405).json({ error: 'Método Não Permitido' });
@@ -14,10 +20,16 @@ export default async function handler(request, response) {
         return response.status(400).json({ error: 'Campos obrigatórios ausentes.' });
     }
 
+    // Verifica se o plano enviado existe e obtém o preço correto
+    const transactionAmount = PRICES[planType];
+    if (!transactionAmount) {
+        return response.status(400).json({ error: 'Tipo de plano inválido.' });
+    }
+
     const expirationDate = new Date(Date.now() + 30 * 60 * 1000).toISOString();
 
     const payment_data = {
-        transaction_amount: 1.00, // Valor fixo de 1.00 para testes
+        transaction_amount: transactionAmount, // <-- ALTERADO: Usa o valor correto do plano
         description: description,
         payment_method_id: 'pix',
         payer: { email: email },
